@@ -1,0 +1,13 @@
+.DS_Store
+
+build/
+
+*.o
+*.out
+*.exe
+*.app
+
+*.dylib
+*.so
+
+.vscode/
