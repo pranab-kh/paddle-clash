@@ -193,6 +193,17 @@ int main() {
         2.90f, 0.01f,  5.0f
     };
 
+    float netVertices[] = {
+        -3.0f, 0.0f,  -0.05f,   // bottom left
+        3.0f, 0.0f,  -0.05f,   // bottom right
+        -3.0f, 0.5f,  -0.05f,   // top left
+
+        3.0f, 0.0f,-0.05f,   // bottom right
+        3.0f, 0.5f, -0.05f,   // top right
+        -3.0f, 0.5f,-0.05f    // top left
+    };
+
+
     unsigned int tableVAO, tableVBO;
 
     // generate them on the GPU
@@ -241,6 +252,20 @@ int main() {
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
+    // VAO VBO for net
+    unsigned int netVAO, netVBO;
+    glGenVertexArrays(1, &netVAO);
+    glGenBuffers(1, &netVBO);
+
+    glBindVertexArray(netVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, netVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(netVertices), netVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
 
     //calls helper defined above to compile both shaders and links them together
     unsigned int shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
@@ -299,6 +324,11 @@ int main() {
         glBindVertexArray(borderVAO);
         glDrawArrays(GL_TRIANGLES, 0, 24); 
 
+        //draw net
+        glUniform4f(colorLoc, 0.9f, 0.9f, 0.9f, 1.0f);
+        glBindVertexArray(netVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
         // swap front and back buffers
         glfwSwapBuffers(window);
 
@@ -315,6 +345,9 @@ int main() {
 
     glDeleteVertexArrays(1, &borderVAO);
     glDeleteBuffers(1, &borderVBO);
+
+    glDeleteVertexArrays(1, &netVAO);
+    glDeleteBuffers(1, &netVBO);
     
     glDeleteProgram(shaderProgram);
 
