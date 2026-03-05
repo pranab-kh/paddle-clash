@@ -270,7 +270,16 @@ int main() {
     //calls helper defined above to compile both shaders and links them together
     unsigned int shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
 
+
+    float deltaTime = 0.0f;  
+    float lastFrame = 0.0f;  
+
     while(!glfwWindowShouldClose(window)) {
+        // delta time 
+        float currentFrame = (float)glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
 
         // check for input
         processInput(window);
