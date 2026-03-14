@@ -1,7 +1,9 @@
 #include "math3d.h"
+#include "vaovbo.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <graphicslibrary.h>
 
 //adjust the viewport to match the new window size
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -130,142 +132,121 @@ int main() {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
+    
 
     // size of the rendering window
     glViewport(0, 0, 800, 600);
 
-    float tableVertices[] = {
-        // Triangle 1
-        -3.0f, 0.0f, -5.0f,  // far left
-        3.0f, 0.0f, -5.0f,  // far right
-        -3.0f, 0.0f,  5.0f,  // near left
+// const GLfloat scale = 1.0;
 
-        // Triangle 2
-        3.0f, 0.0f, -5.0f,  // far right
-        3.0f, 0.0f,  5.0f,  // near right
-        -3.0f, 0.0f,  5.0f   // near left
-    };
+GLfloat tableVertices[] = {
+    // Triangle 1
+    -3.0f, 0.0f, -5.0f,  // far left
+     3.0f, 0.0f, -5.0f,  // far right
+    -3.0f, 0.0f,  5.0f,  // near left
 
-    // center line 
-    float lineVertices[] = {
-        -3.0f, 0.01f, -0.05f,   // far left
-        3.0f, 0.01f, -0.05f,   // far right
-        -3.0f, 0.01f,  0.05f,   // near left
+    // Triangle 2
+     3.0f, 0.0f, -5.0f,  // far right   
+     3.0f, 0.0f,  5.0f,  // near right
+    -3.0f, 0.0f,  5.0f   // near left
+};
 
-        3.0f, 0.01f, -0.05f,   // far right
-        3.0f, 0.01f,  0.05f,   // near right
-        -3.0f, 0.01f,  0.05f    // near left
-    };
+// center line 
+GLfloat lineVertices[] = {
+    -3.0f, 0.01f, -0.05f,   // far left
+     3.0f, 0.01f, -0.05f,   // far right
+    -3.0f, 0.01f,  0.05f,   // near left
 
-    // Table border — 4 edges (top, bottom, left, right)
-    // Y=0.01
-    float borderVertices[] = {
-        // Far edge: AI side 
-        -3.0f, 0.01f, -5.10f,
-        3.0f, 0.01f, -5.10f,
-        -3.0f, 0.01f, -4.90f,
-        3.0f, 0.01f, -5.10f,
-        3.0f, 0.01f, -4.90f,
-        -3.0f, 0.01f, -4.90f,
+     3.0f, 0.01f, -0.05f,   // far right
+     3.0f, 0.01f,  0.05f,   // near right
+    -3.0f, 0.01f,  0.05f    // near left
+};
 
-        // Near edge: player side
-        -3.0f, 0.01f,  4.90f,
-        3.0f, 0.01f,  4.90f,
-        -3.0f, 0.01f,  5.10f,
-        3.0f, 0.01f,  4.90f,
-        3.0f, 0.01f,  5.10f,
-        -3.0f, 0.01f,  5.10f,
+// Table border — 4 edges (top, bottom, left, right)
+// Y=0.02 halved → 0.01
+GLfloat borderVertices[] = {
+    // Far edge: AI side 
+    -3.0f, 0.01f, -5.10f,
+     3.0f, 0.01f, -5.10f,
+    -3.0f, 0.01f, -4.90f,
+     3.0f, 0.01f, -5.10f,
+     3.0f, 0.01f, -4.90f,
+    -3.0f, 0.01f, -4.90f,
 
-        // Left edge 
-        -3.10f, 0.01f, -5.0f,
-        -2.90f, 0.01f, -5.0f,
-        -3.10f, 0.01f,  5.0f,
-        -2.90f, 0.01f, -5.0f,
-        -2.90f, 0.01f,  5.0f,
-        -3.10f, 0.01f,  5.0f,
+    // Near edge: player side
+    -3.0f, 0.01f,  4.90f,
+     3.0f, 0.01f,  4.90f,
+    -3.0f, 0.01f,  5.10f,
+     3.0f, 0.01f,  4.90f,
+     3.0f, 0.01f,  5.10f,
+    -3.0f, 0.01f,  5.10f,
 
-        // Right edge 
-        2.90f, 0.01f, -5.0f,
-        3.10f, 0.01f, -5.0f,
-        2.90f, 0.01f,  5.0f,
-        3.10f, 0.01f, -5.0f,
-        3.10f, 0.01f,  5.0f,
-        2.90f, 0.01f,  5.0f
-    };
+    // Left edge 
+    -3.10f, 0.01f, -5.0f,
+    -2.90f, 0.01f, -5.0f,
+    -3.10f, 0.01f,  5.0f,
+    -2.90f, 0.01f, -5.0f,
+    -2.90f, 0.01f,  5.0f,
+    -3.10f, 0.01f,  5.0f,
 
-    float netVertices[] = {
-        -3.0f, 0.0f,  -0.05f,   // bottom left
-        3.0f, 0.0f,  -0.05f,   // bottom right
-        -3.0f, 0.5f,  -0.05f,   // top left
+    // Right edge 
+     2.90f, 0.01f, -5.0f,
+     3.10f, 0.01f, -5.0f,
+     2.90f, 0.01f,  5.0f,
+     3.10f, 0.01f, -5.0f,
+     3.10f, 0.01f,  5.0f,
+     2.90f, 0.01f,  5.0f
+};
 
-        3.0f, 0.0f,-0.05f,   // bottom right
-        3.0f, 0.5f, -0.05f,   // top right
-        -3.0f, 0.5f,-0.05f    // top left
-    };
+float netVertices[] = {
+    -3.0f, 0.0f,  -0.05f,   // bottom left
+     3.0f, 0.0f,  -0.05f,   // bottom right
+    -3.0f, 0.5f,  -0.05f,   // top left
 
+     3.0f, 0.0f,  -0.05f,   // bottom right
+     3.0f, 0.5f,  -0.05f,   // top right
+    -3.0f, 0.5f,  -0.05f    // top left
+};
+    
+    float ballRadius = 0.1f;
+    Ellipsoid ballEllipsoid(ballRadius, ballRadius, ballRadius);
 
-    unsigned int tableVAO, tableVBO;
+    // Paddle is just an ellipse
+    float paddleRadius = 1.0f;
+    Paddle playerPaddle(paddleRadius, 0, paddleRadius, 0, -5, 0);
 
-    // generate them on the GPU
-    glGenVertexArrays(1, &tableVAO);
-    glGenBuffers(1, &tableVBO);;
+    // Paddle for the opponent
+    Paddle opponentPaddleObject(paddleRadius, 0, paddleRadius, 0, 1, 0);
 
-    // bind VAO first
-    glBindVertexArray(tableVAO);
-
-    // bind VBO and upload the vertex data to the GPU
-    glBindBuffer(GL_ARRAY_BUFFER, tableVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(tableVertices), tableVertices, GL_STATIC_DRAW);
-
-    // tell OpenGL how to read the data
-    // location 0, 3 floats per vertex, no normalization, stride of 3 floats, starts at byte 0 (offset)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    // unbind both (good habit)
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
-
+    // VAO VBO for the table
+    VAOVBO table(tableVertices, sizeof(tableVertices));
+    
     // VAO VBO for center line
-    unsigned int lineVAO, lineVBO;
-    glGenVertexArrays(1, &lineVAO);
-    glGenBuffers(1, &lineVBO);
-
-    glBindVertexArray(lineVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, lineVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(lineVertices), lineVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    VAOVBO line(lineVertices, sizeof(lineVertices));
 
     //  VAO VBO for border
-    unsigned int borderVAO, borderVBO;
-    glGenVertexArrays(1, &borderVAO);
-    glGenBuffers(1, &borderVBO);
-
-    glBindVertexArray(borderVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, borderVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(borderVertices), borderVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    VAOVBO border(borderVertices, sizeof(borderVertices));
 
     // VAO VBO for net
-    unsigned int netVAO, netVBO;
-    glGenVertexArrays(1, &netVAO);
-    glGenBuffers(1, &netVBO);
+    VAOVBO net(netVertices, sizeof(netVertices));
 
-    glBindVertexArray(netVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, netVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(netVertices), netVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    // VAO VBO for ball
+    VAOVBO ball(ballEllipsoid.points, ballEllipsoid.size * sizeof(GLfloat));
 
+    // Paddle
+    VAOVBO paddle(playerPaddle.points, playerPaddle.size * sizeof(GLfloat));
+
+    // Paddle Handle
+    VAOVBO handle(playerPaddle.handleVertices, playerPaddle.handleVertexCount * sizeof(GLfloat));
+
+    // Opponent Paddle
+    VAOVBO opponentPaddle(opponentPaddleObject.points, opponentPaddleObject.size * sizeof(GLfloat));
+
+    // Opponent Handle
+    VAOVBO opponentHandle(opponentPaddleObject.handleVertices, opponentPaddleObject.handleVertexCount * sizeof(GLfloat));
+
+
+    
 
     //calls helper defined above to compile both shaders and links them together
     unsigned int shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
@@ -278,7 +259,7 @@ int main() {
         // set color to clear the screen
         glClearColor(0.15f, 0.15f, 0.15f, 1.0f); // dark grey
 
-        // clear the screen
+        // clear the screen and assign new color
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shaderProgram);      // activate  shader
@@ -294,7 +275,7 @@ int main() {
 
         // projection: mapping 3d to 2d screen
         // 45 degree fov, 800/600 aspect ratio, near=0.1, far=100
-        // Mat4 proj = perspective(45.0f, 800.0f/600.0f, 0.1f, 100.0f);
+        // Mat4 proj = perspective(45.0f, 800.0f /600.0f, 0.1f, 100.0f);
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
         float aspect = (float)width / (float)height;
@@ -311,23 +292,65 @@ int main() {
         int colorLoc = glGetUniformLocation(shaderProgram, "color");
         glUniform4f(colorLoc, 0.1f, 0.5f, 0.2f, 1.0f); //dark green table
         
-        glBindVertexArray(tableVAO); // use  vertex data
+        table.VAO::Bind(); // use  vertex data
         glDrawArrays(GL_TRIANGLES, 0, 6); // draw 6 vertices(2triangles)
 
         // draw center line in white
         glUniform4f(colorLoc, 1.0f, 1.0f, 1.0f, 1.0f);
-        glBindVertexArray(lineVAO);
+        line.VAO::Bind();
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         // draw border in white
         glUniform4f(colorLoc, 1.0f, 1.0f, 1.0f, 1.0f);
-        glBindVertexArray(borderVAO);
+        border.VAO::Bind();
         glDrawArrays(GL_TRIANGLES, 0, 24); 
 
-        //draw net
+        // draw net
         glUniform4f(colorLoc, 0.9f, 0.9f, 0.9f, 1.0f);
-        glBindVertexArray(netVAO);
+        net.VAO::Bind();
         glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        // draw ball
+        rgb ballColor(254, 170, 45);
+        glUniform4f(colorLoc, ballColor.r, ballColor.g, ballColor.b, 0.8f);
+        ball.VAO::Bind();
+        glDrawArrays(GL_LINE_LOOP, 0, ballEllipsoid.size/3);
+
+        // draw paddle 
+        rgb paddleColor(220, 20, 30);
+        glUniform4f(colorLoc, paddleColor.r, paddleColor.g, paddleColor.b, 0.8f);
+        paddle.VAO::Bind();
+        glDrawArrays(GL_LINE_LOOP, 0, (playerPaddle.triangleStartIdx)/3);
+        
+        rgb paddleTriangleColor(220, 185, 158);
+        // The lower part of paddle that resembles a triangle
+        glUniform4f(colorLoc, paddleTriangleColor.r, paddleTriangleColor.g, paddleTriangleColor.b, 0.8f);
+        glDrawArrays(GL_LINE_LOOP, (playerPaddle.triangleStartIdx)/3, (playerPaddle.size - playerPaddle.triangleStartIdx)/3);
+
+        // draw handle
+        rgb handleColor(69, 72, 81);
+        glUniform4f(colorLoc, handleColor.r, handleColor.g, handleColor.b, 0.8f);
+        handle.VAO::Bind();
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+
+        // draw opponent's paddle 
+        rgb oppPaddleColor(220, 20, 30);
+        glUniform4f(colorLoc, oppPaddleColor.r, oppPaddleColor.g, oppPaddleColor.b, 0.8f);
+        opponentPaddle.VAO::Bind();
+        glDrawArrays(GL_LINE_LOOP, 0, (opponentPaddleObject.triangleStartIdx)/3);
+        
+        rgb oppPaddleTriangleColor(220, 185, 158);
+        // The lower part of paddle that resembles a triangle
+        glUniform4f(colorLoc, oppPaddleTriangleColor.r, oppPaddleTriangleColor.g, oppPaddleTriangleColor.b, 0.8f);
+        glDrawArrays(GL_LINE_LOOP, (opponentPaddleObject.triangleStartIdx)/3, (opponentPaddleObject.size - opponentPaddleObject.triangleStartIdx)/3);
+
+        // draw handle
+        rgb opponentHandleColor(69, 72, 81);
+        glUniform4f(colorLoc, opponentHandleColor.r, opponentHandleColor.g, opponentHandleColor.b, 0.8f);
+        opponentHandle.VAO::Bind();
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
 
         // swap front and back buffers
         glfwSwapBuffers(window);
@@ -337,17 +360,10 @@ int main() {
     }
     
     //cleanup
-    glDeleteVertexArrays(1, &tableVAO);
-    glDeleteBuffers(1, &tableVBO);
-
-    glDeleteVertexArrays(1, &lineVAO);
-    glDeleteBuffers(1, &lineVBO);
-
-    glDeleteVertexArrays(1, &borderVAO);
-    glDeleteBuffers(1, &borderVBO);
-
-    glDeleteVertexArrays(1, &netVAO);
-    glDeleteBuffers(1, &netVBO);
+    table.Delete();
+    line.Delete();
+    border.Delete();
+    net.Delete();
     
     glDeleteProgram(shaderProgram);
 

@@ -91,7 +91,7 @@ inline Mat4 identity() {
     return M;
 }
 
-
+// All matrix transformations are used as M * transformation(arguments) where transform where transformation = translate, scale or rotate
 inline Mat4 translate(float tx, float ty, float tz) {
     Mat4 M = identity();
     M.at(0,3) = tx;
