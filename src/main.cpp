@@ -212,11 +212,16 @@ float netVertices[] = {
     Ellipsoid ballEllipsoid(ballRadius, ballRadius, ballRadius);
 
     // Paddle is just an ellipse
-    float paddleRadius = 1.0f;
-    Paddle playerPaddle(paddleRadius, 0, paddleRadius, 0, -5, 0);
+    // float paddleRadius = 1.0f;
+    float paddleRadius = 0.5f;
+    // Paddle playerPaddle(paddleRadius, 0, paddleRadius, 0, -5, 0);
+    Paddle playerPaddle(paddleRadius, 0, paddleRadius, 0, 0.01f, 3.5f);
 
     // Paddle for the opponent
-    Paddle opponentPaddleObject(paddleRadius, 0, paddleRadius, 0, 1, 0);
+    // Paddle opponentPaddleObject(paddleRadius, 0, paddleRadius, 0, 0.01f, -4.5f);
+    Paddle opponentPaddleObject(paddleRadius, 0, paddleRadius, 0, 0.01f, -4.7f);
+
+    // Paddle opponentPaddleObject(paddleRadius, 0, paddleRadius, 0, 1, 0);
 
     // VAO VBO for the table
     VAOVBO table(tableVertices, sizeof(tableVertices));
@@ -267,10 +272,16 @@ float netVertices[] = {
         // build MVP
         Mat4 model = identity();
 
+        // Mat4 view = lookAt(
+        //     Vec3(0.0f, 8.0f, 8.0f),   // camera is above and behind player side
+        //     Vec3(0.0f, 0.0f, 0.0f),   // looking at center of table
+        //     Vec3(0.0f, 1.0f, 0.0f)    // up direction
+        // );
+
         Mat4 view = lookAt(
-            Vec3(0.0f, 8.0f, 8.0f),   // camera is above and behind player side
-            Vec3(0.0f, 0.0f, 0.0f),   // looking at center of table
-            Vec3(0.0f, 1.0f, 0.0f)    // up direction
+            Vec3(0.0f, 8.0f, 9.0f),
+            Vec3(0.0f, 0.0f, 0.0f),
+            Vec3(0.0f, 1.0f, 0.0f)
         );
 
         // projection: mapping 3d to 2d screen
