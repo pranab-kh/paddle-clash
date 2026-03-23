@@ -288,9 +288,9 @@ float netVertices[] = {
     while(!glfwWindowShouldClose(window)) {
         // delta time 
         float currentFrame = (float)glfwGetTime();
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
-
+        deltaTime = currentFrame - timeOfPreviousFrame;
+        timeOfPreviousFrame = currentFrame;
+ 
 
         float timeOfCurrentFrame = glfwGetTime();
         deltaTime = timeOfCurrentFrame - timeOfPreviousFrame;
