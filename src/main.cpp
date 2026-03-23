@@ -362,8 +362,6 @@ float netVertices[] = {
             paddle.updateData(playerPaddle.points, playerPaddle.size * sizeof(GLfloat));
             playerPaddle.mousePrevPos = playerPaddle.mouseCurrentPos;
             mouseMoved = 0;
-            // Re center the position of the mouse so it doesn't fly away
-            glfwSetCursorPos(window, windowWidth/2, windowHeight/2);
         }
         paddle.VAO::Bind();
         glDrawArrays(GL_LINE_LOOP, 0, (playerPaddle.triangleStartIdx)/3);

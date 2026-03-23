@@ -88,6 +88,8 @@ struct Paddle: public Ellipsoid{
     GLfloat radius;
     Vec3 mousePrevPos;
     Vec3 mouseCurrentPos;
+    Vec3 hitBoxMin;
+    Vec3 hitBoxMax;
 
     Paddle(GLfloat a, GLfloat b, GLfloat c, GLfloat h = 0, GLfloat k = 0, GLfloat l = 0) : Ellipsoid(a, b, c, h, k, l){
             // Hard coded the center position of the player racket in coordinates
@@ -96,6 +98,7 @@ struct Paddle: public Ellipsoid{
             // We only need to compare between two radii because 2 out of 3 radii are same and one 1 out of 3 is 0.
             radius = (a > b)? a : b;
             updateHandleCoords();
+            updateHitboxes();
     }
 
     void updateHandleCoords()
@@ -138,6 +141,7 @@ struct Paddle: public Ellipsoid{
     void updateAllPoints(){
         Ellipsoid::updateAllPoints();
         updateHandleCoords();
+        updateHitboxes();
     }
 
     void movePaddle(float winWidth, float winHeight){
@@ -159,6 +163,12 @@ struct Paddle: public Ellipsoid{
         // All points are updated according to the center that we just changed
         updateAllPoints();
     }
+
+    void updateHitboxes(){
+        // Z axis is reversed so z has negative sign
+        hitBoxMin = (pos.x - radius, pos.y-radius, pos.z + 0.05f);
+        hitBoxMax = (pos.x + radius, pos.y+radius, pos.z - 0.05f);
+    }
 };
 
 
@@ -169,7 +179,8 @@ struct Ball : public Ellipsoid{
         acc = Vec3(0, -9.8/3, 0);
     }
 
-    void updateKinematics(float deltaTime, Paddle& playerPaddle, Paddle& opponentPaddle)
+    // void updateKinematics(float deltaTime, Paddle& playerPaddle, Paddle& opponentPaddle)
+    void updateKinematics(float deltaTime)
     {
         vel = vel + acc * deltaTime;
         pos = pos + vel * deltaTime;
@@ -179,10 +190,17 @@ struct Ball : public Ellipsoid{
             vel.y *= -1 * coeffOfRestitution;
         }
 
-        // Collision with the rackets
+        // // From here
 
-        // Collision with the player paddle
-        
+        // // Collision with the paddles
+
+        // // Collision with the player paddle
+        // // Finding the  point in the hitbox of the paddle which is closest to the ball
+        //  float xClosest, yClosest, zClosest;
+        //  if(pos.x < playerPaddle.hitBoxMin.x)
+        //     xClosest = playerPaddle.hitBoxMin.x;
+        //  if(pos.x > xClosest)
+
 
         updateAllPoints();
     }
