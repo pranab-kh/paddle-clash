@@ -20,7 +20,9 @@ struct rgb
 // Ellipsoid for ball and racket
 struct Ellipsoid{
     //Length of semi axes and the center
-    GLfloat a,b,c,h,k,l; 
+    GLfloat a,b,c; 
+    Vec3 pos;
+    Vec3 vel;
     GLfloat *points;
     // Number of horizontal sections
     const int stacks = 400;
@@ -28,8 +30,9 @@ struct Ellipsoid{
     const int slices = 400;
     const int vertices = stacks * slices;
     const int size = vertices * 3;
-    Ellipsoid(GLfloat a, GLfloat b, GLfloat c, GLfloat h = 0, GLfloat k = 0, GLfloat l = 0) : a(a), b(b), c(c), h(h), k(k), l(l){
-        points = new GLfloat[size];
+
+    void updateAllPoints()
+    {
         GLfloat phi = 0;
         GLfloat phistep =  M_PI/stacks;
         GLfloat thetastep = (2 * M_PI)/slices;
@@ -40,33 +43,56 @@ struct Ellipsoid{
             GLfloat theta = 0;
             for(int j = 0; j < slices; j++)
             {
-                points[idx++] = h + a * cosf(theta) * sinf(phi);
-                points[idx++] = k + b * sinf(theta) * sinf(phi);
+                points[idx++] = pos.x + a * cosf(theta) * sinf(phi);
+                points[idx++] = pos.y + b * sinf(theta) * sinf(phi);
                 // We are in (x,y,-z) octant so, z is subtracted
-                points[idx++] = l - c * cosf(phi);
+                points[idx++] = pos.z - c * cosf(phi);
                 theta += thetastep;
             }
             phi += phistep;
-        }
+        }   
     }
+
+    Ellipsoid(GLfloat a, GLfloat b, GLfloat c, GLfloat h = 0, GLfloat k = 0, GLfloat l = 0) : a(a), b(b), c(c){
+        pos = Vec3(h, k, l);
+        points = new GLfloat[size];
+        updateAllPoints();
+    }
+
+    void changeCenterCoords(float x, float y, float z){
+        pos = Vec3(x, y, z);
+    }
+
+    void incrementCenterCoords(float x, float y, float z ){
+        pos = pos + Vec3(x, y, z);
+    }
+
 
     ~Ellipsoid(){
         delete[] points;
     }  
 };
 
+
+
+
 // Paddle contains an ellipse partitioned into red and skin color in 70 : 30 ratio with a handle.
 struct Paddle: public Ellipsoid{
     const int triangleStartIdx = size * 0.7;
     const int handleStartIdx = triangleStartIdx + int(slices/5) * 3;
-    const int handleEndIdx = triangleStartIdx + int(slices/3) * 3;
+    const int handleEndIdx = triangleStartIdx + int(slices/3.5) * 3;
     const static int handleVertexCount = 18;
     GLfloat handleVertices[handleVertexCount];
     GLfloat radius;
     Paddle(GLfloat a, GLfloat b, GLfloat c, GLfloat h = 0, GLfloat k = 0, GLfloat l = 0) : Ellipsoid(a, b, c, h, k, l){
             // We only need to compare between two radii because 2 out of 3 radii are same and one 1 out of 3 is 0.
             radius = (a > b)? a : b;
-            int idx = 0;
+            updateHandleCoords();
+    }
+
+    void updateHandleCoords()
+    {
+             int idx = 0;
             // Left top edge
             for(int i = 0; i < 3; i++)
             {
@@ -99,6 +125,11 @@ struct Paddle: public Ellipsoid{
             {
                 handleVertices[idx++] = points[handleEndIdx + i];
             }
+    }
+
+    void updateAllPoints(){
+        Ellipsoid::updateAllPoints();
+        updateHandleCoords();
     }
 };
 
