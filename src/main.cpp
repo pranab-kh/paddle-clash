@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <graphicslibrary.h>
+#include <string>
 
 // Adjust the viewport to match the new window size
 int windowWidth;
@@ -14,6 +15,9 @@ const int rotationUnit = 5;
 
 enum GameState { SERVING, PLAYING };
 GameState gameState = SERVING;
+
+int playerScore = 0;
+int opponentScore = 0;
 
 // Player Paddle declared here so that mouseCallBack will be able to access it
 float paddleRadius = 0.5f;
@@ -334,10 +338,26 @@ int main() {
         ballEllipsoid.followPaddle(playerPaddle);
     } else {
         ballEllipsoid.updateKinematics(deltaTime, playerPaddle, opponentPaddleObject);
+        //added
+        ballEllipsoid.updateKinematics(deltaTime, playerPaddle, opponentPaddleObject);
+        std::cout << "ball z: " << ballEllipsoid.pos.z << std::endl;
+        //end add
         if(ballEllipsoid.outOfBounds) {
+            if(ballEllipsoid.playerScored) {
+                playerScore++;
+                ballEllipsoid.playerScored = false;
+            }
+            if(ballEllipsoid.opponentScored) {
+                opponentScore++;
+                ballEllipsoid.opponentScored = false;
+            }
             ballEllipsoid.outOfBounds = false;
             gameState = SERVING;
             ballEllipsoid.resetToServe(playerPaddle);
+
+            // Update window title with new score
+            std::string title = "Table Tennis  |  You: " + std::to_string(playerScore) + "  AI: " + std::to_string(opponentScore);
+            glfwSetWindowTitle(window, title.c_str());
         }
     }
 

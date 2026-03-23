@@ -165,7 +165,9 @@ struct Ball : public Ellipsoid{
     float radius;
     const float coeffOfRestitutionForTable = 0.3;
     const float coeffOfRestitutionForPaddle = 1.2;
-    bool outOfBounds = false; 
+    bool outOfBounds = false;
+    bool playerScored = false;   // ball went past opponent (z < -5)
+    bool opponentScored = false; // ball went past player (z > 5)
     
     Ball(float rad, float h = 0, float k = 0, float l = 0) : Ellipsoid(rad, rad, rad, h, k, l){
         radius = rad;
@@ -208,6 +210,16 @@ struct Ball : public Ellipsoid{
             vel.z = 4.0f;
             vel.y = 3.0f;
             vel.x *= 0.5f;
+         }
+
+         // Out of bounds check
+         if(pos.z >= 5.0f) {
+             outOfBounds = true;
+             opponentScored = true;
+         }
+         if(pos.z <= -5.0f) {
+             outOfBounds = true;
+             playerScored = true;
          }
     }
 
