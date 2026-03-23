@@ -44,9 +44,10 @@ struct Ellipsoid{
             for(int j = 0; j < slices; j++)
             {
                 points[idx++] = pos.x + a * cosf(theta) * sinf(phi);
-                points[idx++] = pos.y + b * sinf(theta) * sinf(phi);
+                // points[idx++] = pos.y + b * sinf(theta) * sinf(phi);
                 // We are in (x,y,-z) octant so, z is subtracted
-                points[idx++] = pos.z - c * cosf(phi);
+                points[idx++] = pos.y + b * cosf(phi);
+                points[idx++] = pos.z - c * sinf(theta) * sinf(phi);
                 theta += thetastep;
             }
             phi += phistep;
@@ -59,12 +60,12 @@ struct Ellipsoid{
         updateAllPoints();
     }
 
-    void changeCenterCoords(float x, float y, float z){
-        pos = Vec3(x, y, z);
+    void changeCenterCoords(float x, float y){
+        pos = Vec3(x, y);
     }
 
-    void incrementCenterCoords(float x, float y, float z ){
-        pos = pos + Vec3(x, y, z);
+    void incrementCenterCoords(float x, float y){
+        pos = pos + Vec3(x, y);
     }
 
 
@@ -84,7 +85,13 @@ struct Paddle: public Ellipsoid{
     const static int handleVertexCount = 18;
     GLfloat handleVertices[handleVertexCount];
     GLfloat radius;
+    Vec3 mousePrevPos;
+    Vec3 mouseCurrentPos;
+
     Paddle(GLfloat a, GLfloat b, GLfloat c, GLfloat h = 0, GLfloat k = 0, GLfloat l = 0) : Ellipsoid(a, b, c, h, k, l){
+            // Hard coded the center position of the player racket in coordinates
+            mousePrevPos = Vec3(0, 0.01, 3.5);
+            mouseCurrentPos = Vec3(0, 0.01, 3.5);
             // We only need to compare between two radii because 2 out of 3 radii are same and one 1 out of 3 is 0.
             radius = (a > b)? a : b;
             updateHandleCoords();
@@ -107,18 +114,18 @@ struct Paddle: public Ellipsoid{
 
             // Left bottom edge
             handleVertices[idx++] = handleVertices[0];
-            handleVertices[idx++] = handleVertices[1];
-            handleVertices[idx++] = handleVertices[2] + radius;
+            handleVertices[idx++] = handleVertices[1] - radius;
+            handleVertices[idx++] = handleVertices[2];
 
             // Left bottom edge
             handleVertices[idx++] = handleVertices[0];
-            handleVertices[idx++] = handleVertices[1];
-            handleVertices[idx++] = handleVertices[2] + radius;
+            handleVertices[idx++] = handleVertices[1] - radius;
+            handleVertices[idx++] = handleVertices[2];
 
             // Right bottom edge
             handleVertices[idx++] = handleVertices[3];
-            handleVertices[idx++] = handleVertices[4];
-            handleVertices[idx++] = handleVertices[5] + radius;
+            handleVertices[idx++] = handleVertices[4] - radius;
+            handleVertices[idx++] = handleVertices[5];
 
             // Right top edge
             for(int i = 0; i < 3; i++)
@@ -130,6 +137,26 @@ struct Paddle: public Ellipsoid{
     void updateAllPoints(){
         Ellipsoid::updateAllPoints();
         updateHandleCoords();
+    }
+
+    void movePaddle(float winWidth, float winHeight){
+        // Calculate the displacement
+        Vec3 displacement = (mouseCurrentPos - mousePrevPos);
+        if(magnitude(displacement) == 0)
+        {
+            return;
+        }
+        // Normalize the displacement
+        Vec3 normalizedDisplacement = normalize(displacement);
+        // In order to change the increase the speed of racket motion when mouse travels more distance, we use two scales
+        float xScale = abs(displacement.x * 6.5)/(winWidth);
+        float yScale = abs(displacement.y * 6.5)/(winHeight);
+        normalizedDisplacement.x *= xScale;
+        normalizedDisplacement.y *= yScale;
+
+        incrementCenterCoords(normalizedDisplacement.x, normalizedDisplacement.y);
+        // All points are updated according to the center that we just changed
+        updateAllPoints();
     }
 };
 

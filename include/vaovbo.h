@@ -23,6 +23,13 @@ struct VBO{
         glBufferData(GL_ARRAY_BUFFER, x, f , GL_STATIC_DRAW);
     }
 
+    
+    void updateData(GLfloat* f, size_t x)
+    {
+        Bind();
+        glBufferSubData(GL_ARRAY_BUFFER, 0, x, f);
+    }
+
     void Delete(){
         glDeleteBuffers(1, &object);
     }

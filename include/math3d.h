@@ -52,6 +52,7 @@ inline Vec3 normalize(const Vec3& v) {
 struct Vec4 {
     float x, y, z, w;
     Vec4(float x = 0, float y = 0, float z = 0, float w = 0) : x(x), y(y), z(z), w(w) {}
+    Vec4(Vec3 vec3d, float w = 0) : x(vec3d.x), y(vec3d.y), z(vec3d.z), w(w){}
 };
 
 
@@ -79,6 +80,17 @@ inline Mat4 operator*(const Mat4& A, const Mat4& B) {
         }
     }
     return C;
+}
+
+inline Vec4 operator*(const Mat4& A, const Vec4& v) {
+    Vec4 result;
+
+    result.x = A.at(0,0)*v.x + A.at(0,1)*v.y + A.at(0,2)*v.z + A.at(0,3)*v.w;
+    result.y = A.at(1,0)*v.x + A.at(1,1)*v.y + A.at(1,2)*v.z + A.at(1,3)*v.w;
+    result.z = A.at(2,0)*v.x + A.at(2,1)*v.y + A.at(2,2)*v.z + A.at(2,3)*v.w;
+    result.w = A.at(3,0)*v.x + A.at(3,1)*v.y + A.at(3,2)*v.z + A.at(3,3)*v.w;
+
+    return result;
 }
 
 
