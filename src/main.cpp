@@ -396,6 +396,11 @@ float netVertices[] = {
         opponentHandle.VAO::Bind();
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
+        // update AI movement
+        updateAI(opponentPaddleObject, ballEllipsoid, deltaTime);
+        opponentPaddle.updateData(opponentPaddleObject.points, opponentPaddleObject.size * sizeof(GLfloat));
+        opponentHandle.updateData(opponentPaddleObject.handleVertices, opponentPaddleObject.handleVertexCount * sizeof(GLfloat));
+
         // draw ball
         rgb ballColor(254, 170, 45);
         glUniform4f(colorLoc, ballColor.r, ballColor.g, ballColor.b, 0.8f);

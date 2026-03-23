@@ -6,6 +6,7 @@
 #include "vaovbo.h"
 #include "math3d.h"
 
+
 // RGB struct to convert RGB colors to normalized form
 struct rgb
 {
@@ -213,5 +214,22 @@ struct Ball : public Ellipsoid{
         updateAllPoints();
     }
 };
+
+
+void updateAI(Paddle& aiPaddle, const Ball& ball, float deltaTime){
+    float aiSpeed = 2.5f;
+    float deadzone = 0.05f;
+
+    if(ball.pos.x > aiPaddle.pos.x + deadzone)
+        aiPaddle.pos.x += aiSpeed * deltaTime;
+    else if(ball.pos.x < aiPaddle.pos.x - deadzone)
+        aiPaddle.pos.x -= aiSpeed * deltaTime;
+
+    if(aiPaddle.pos.x < -2.5f) aiPaddle.pos.x = -2.5f;
+    if(aiPaddle.pos.x >  2.5f) aiPaddle.pos.x =  2.5f;
+
+    aiPaddle.updateAllPoints();
+}
+
 
 #endif
