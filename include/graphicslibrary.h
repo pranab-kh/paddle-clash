@@ -162,6 +162,7 @@ struct Ball : public Ellipsoid{
     float radius;
     const float coeffOfRestitutionForTable = 0.3;
     const float coeffOfRestitutionForPaddle = 1.2;
+    bool outOfBounds = false; 
     
     Ball(float rad, float h = 0, float k = 0, float l = 0) : Ellipsoid(rad, rad, rad, h, k, l){
         radius = rad;
@@ -183,13 +184,15 @@ struct Ball : public Ellipsoid{
         }
 
         // Collision with player paddle
-         Vec3 closestPoint = getClosestPoint(playerPaddle.hitBoxMin, playerPaddle.hitBoxMax);
-         float dist = distance(pos, closestPoint);
-         if(dist <= radius)
-         {
-            vel.z *= -1 * coeffOfRestitutionForPaddle;
-            vel.y += -acc.y/10;
-         }
+        Vec3 closestPoint = getClosestPoint(playerPaddle.hitBoxMin, playerPaddle.hitBoxMax);
+        float dist = distance(pos, closestPoint);
+        if(dist <= radius)
+        {
+            vel.z = -4.0f;              // always shoot toward opponent on hit
+            vel.y = 3.0f;               // consistent upward arc
+            vel.x *= 0.5f;              // dampen sideways drift
+        }
+                
 
          // Collision with opponent paddle
          closestPoint = getClosestPoint(opponentPaddle.hitBoxMin, opponentPaddle.hitBoxMax);
@@ -218,6 +221,19 @@ struct Ball : public Ellipsoid{
         else closest.z = pos.z;
 
         return closest;
+    }
+
+    void resetToServe(const Paddle& paddle) {
+        pos = Vec3(paddle.pos.x, paddle.pos.y + radius + 0.3f, paddle.pos.z);
+        vel = Vec3(0, -1.0f, -0.5f);  // slight drop + slight push toward opponent
+        acc = Vec3(0, -9.8f, 0);
+    }
+
+    void followPaddle(const Paddle& paddle) {
+        pos.x = paddle.pos.x;
+        pos.z = paddle.pos.z;
+        // Y stays fixed above paddle
+        pos.y = paddle.pos.y + radius + 0.3f;
     }
 };
 

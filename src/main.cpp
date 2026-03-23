@@ -10,6 +10,9 @@ int windowWidth;
 int windowHeight;
 int mouseMoved = 0;
 
+enum GameState { SERVING, PLAYING };
+GameState gameState = SERVING;
+
 // Player Paddle declared here so that mouseCallBack will be able to access it
 float paddleRadius = 0.5f;
 Paddle playerPaddle(paddleRadius, paddleRadius ,0, 0, 0.0f, 0);
@@ -93,6 +96,14 @@ void mousePosCallback(GLFWwindow* window, double posx, double posy){
     mouseMoved = 1;
 }
 
+void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        if(gameState == SERVING) {
+            gameState = PLAYING;
+        }
+    }
+}
+
 int main() {
     // Initialize glfw
     if(!glfwInit()) {
@@ -113,9 +124,10 @@ int main() {
     }
 
     glfwMakeContextCurrent(window);
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mousePosCallback);
+    glfwSetMouseButtonCallback(window, mouseButtonCallback);
 
     if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cout << "Failed to initialize GLAD" << std::endl;
@@ -174,6 +186,8 @@ int main() {
     // VAO VBO for ball
     VAOVBO ball(ballEllipsoid.points, ballEllipsoid.size * sizeof(GLfloat));
     ballEllipsoid.changeCenterCoords(0, 0.5, 0);
+    ballEllipsoid.resetToServe(playerPaddle);
+
 
     // Paddle
     VAOVBO paddle(playerPaddle.points, playerPaddle.size * sizeof(GLfloat));
@@ -291,16 +305,26 @@ int main() {
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         // --- BALL ---
+        // --- BALL ---
+    if(gameState == SERVING) {
+        ballEllipsoid.followPaddle(playerPaddle);
+    } else {
         ballEllipsoid.updateKinematics(deltaTime, playerPaddle, opponentPaddleObject);
-        Vec3 ballModel = ballEllipsoid.pos;
-        mvp = proj * view * generateTranslateMatrix(ballModel);
-        glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, mvp.m);
-        
-        rgb ballColor(254, 170, 45);
-        glUniform4f(colorLoc, ballColor.r, ballColor.g, ballColor.b, 0.8f);
-        ball.VAO::Bind();
-        
-        glDrawArrays(GL_LINE_LOOP, 0, ballEllipsoid.size/3);
+        if(ballEllipsoid.outOfBounds) {
+            ballEllipsoid.outOfBounds = false;
+            gameState = SERVING;
+            ballEllipsoid.resetToServe(playerPaddle);
+        }
+    }
+
+    Vec3 ballModel = ballEllipsoid.pos;
+    mvp = proj * view * generateTranslateMatrix(ballModel);
+    glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, mvp.m);
+
+    rgb ballColor(254, 170, 45);
+    glUniform4f(colorLoc, ballColor.r, ballColor.g, ballColor.b, 0.8f);
+    ball.VAO::Bind();
+    glDrawArrays(GL_LINE_LOOP, 0, ballEllipsoid.size/3);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
