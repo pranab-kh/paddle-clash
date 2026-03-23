@@ -165,10 +165,11 @@ struct Paddle: public Ellipsoid{
     }
 
     void updateHitboxes(){
-        // Z axis is reversed so z has negative sign
-        hitBoxMin = (pos.x - radius, pos.y-radius, pos.z + 0.05f);
-        hitBoxMax = (pos.x + radius, pos.y+radius, pos.z - 0.05f);
+    // Z axis is reversed so z has negative sign
+    hitBoxMin = Vec3(pos.x - radius, pos.y - radius, pos.z + 0.05f);
+    hitBoxMax = Vec3(pos.x + radius, pos.y + radius, pos.z - 0.05f);
     }
+
 };
 
 
