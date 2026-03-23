@@ -84,11 +84,13 @@ struct Paddle: public Ellipsoid{
     Vec3 mouseCurrentPos;
     Vec3 hitBoxMin;
     Vec3 hitBoxMax;
+    float rotation;
 
     Paddle(GLfloat a, GLfloat b, GLfloat c, GLfloat h = 0, GLfloat k = 0, GLfloat l = 0) : Ellipsoid(a, b, c, h, k, l){
             mousePrevPos = Vec3(0, 0.01, 3.5);
             mouseCurrentPos = Vec3(0, 0.01, 3.5);
             radius = (a > b)? a : b;
+            rotation = 0;
             updateHandleCoords();
             updateHitboxes();
     }
@@ -153,8 +155,9 @@ struct Paddle: public Ellipsoid{
 
     void updateHitboxes(){
         // Hitbox logic from working branch
+        float hitboxscale = 1;
         hitBoxMin = Vec3(pos.x - radius, pos.y-radius, pos.z - 0.05f);
-        hitBoxMax = Vec3(pos.x + radius, pos.y+radius, pos.z + 0.05f);
+        hitBoxMax = Vec3(pos.x + radius, pos.y+radius, pos.z + 0.05f) * hitboxscale;
     }
 };
 
@@ -189,8 +192,9 @@ struct Ball : public Ellipsoid{
         if(dist <= radius)
         {
             vel.z = -4.0f;              // always shoot toward opponent on hit
-            vel.y = 3.0f;               // consistent upward arc
+            vel.y = 5.0f;               // consistent upward arc (changed from 3 to 5!!!)
             vel.x *= 0.5f;              // dampen sideways drift
+            vel.x += -(playerPaddle.rotation)/25; // x motion comes with rotating the paddle
         }
                 
 
@@ -199,8 +203,11 @@ struct Ball : public Ellipsoid{
          dist = distance(pos, closestPoint);
          if(dist <= radius)
          {
+            // vel.x += closestPoint.x;
+            // vel.x += -(playerPaddle.rotation)/25;
             vel.z *= -1 * coeffOfRestitutionForPaddle;
-            vel.y += -acc.y/10;
+            // Changed from /10 to /5 - Rikison
+            vel.y += -acc.y/5;
          }
     }
 
@@ -225,7 +232,7 @@ struct Ball : public Ellipsoid{
 
     void resetToServe(const Paddle& paddle) {
         pos = Vec3(paddle.pos.x, paddle.pos.y + radius + 0.3f, paddle.pos.z);
-        vel = Vec3(0, -1.0f, -0.5f);  // slight drop + slight push toward opponent
+        vel = Vec3(0, -1.0f, -3.5f);  // slight drop + (not so) light push toward opponent
         acc = Vec3(0, -9.8f, 0);
     }
 

@@ -3,6 +3,10 @@
 
 #include <cmath> //used sqrtf, cosf, sinf, tanf
 
+inline float toRadians(float degrees) {
+    return degrees * (3.14159265358979f / 180.0f);
+}
+
 struct Vec3 {
     float x, y, z;
     Vec3(float x = 0, float y = 0, float z = 0) : x(x), y(y), z(z) {}
@@ -137,13 +141,27 @@ inline Mat4 rotateX(float angle) {
     return M;
 }
 
-inline Mat4 rotateY(float angle) {
+inline Mat4 rotateY(float angle, Vec3 point = Vec3(0,0,0), bool radian = false){
+    if(!radian)
+    {
+        angle = toRadians(angle);
+    }
+    
     Mat4 M = identity();
     float c = cosf(angle), s = sinf(angle);
+    
+    // 1. The standard Rotation components
     M.at(0,0) =  c;
     M.at(0,2) =  s;
     M.at(2,0) = -s;
     M.at(2,2) =  c;
+    
+    // 2. The Translation components to offset the rotation to your specific point
+    // This represents the calculation: Point - (RotationMatrix * Point)
+    M.at(0,3) = point.x - (c * point.x) - (s * point.z);
+    // M.at(1,3) remains 0.0f because Y doesn't shift during a Y-axis rotation
+    M.at(2,3) = point.z + (s * point.x) - (c * point.z);
+    
     return M;
 }
 
@@ -155,11 +173,6 @@ inline Mat4 rotateZ(float angle) {
     M.at(1,0) =  s;
     M.at(1,1) =  c;
     return M;
-}
-
-
-inline float toRadians(float degrees) {
-    return degrees * (3.14159265358979f / 180.0f);
 }
 
 

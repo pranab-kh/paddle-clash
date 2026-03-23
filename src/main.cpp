@@ -9,6 +9,8 @@
 int windowWidth;
 int windowHeight;
 int mouseMoved = 0;
+// Default rotation unit in degrees
+const int rotationUnit = 5; 
 
 enum GameState { SERVING, PLAYING };
 GameState gameState = SERVING;
@@ -104,6 +106,19 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
     }
 }
 
+void keyPressCallback(GLFWwindow* window, int key, int scancode, int action, int mods){
+    // Rotation towards left
+    if(key == GLFW_KEY_A) // && playerPaddle.rotation <= -30)
+    {
+        playerPaddle.rotation -= rotationUnit;
+    }
+    // Rotation towards right
+    else if(key == GLFW_KEY_D) //  && playerPaddle.rotation >= 30)
+    {
+        playerPaddle.rotation += rotationUnit;
+    }
+}
+
 int main() {
     // Initialize glfw
     if(!glfwInit()) {
@@ -124,10 +139,11 @@ int main() {
     }
 
     glfwMakeContextCurrent(window);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mousePosCallback);
     glfwSetMouseButtonCallback(window, mouseButtonCallback);
+    glfwSetKeyCallback(window, keyPressCallback);
 
     if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cout << "Failed to initialize GLAD" << std::endl;
@@ -264,7 +280,7 @@ int main() {
         }
 
         Vec3 paddleModel = playerPaddle.pos;
-        mvp = proj * view * generateTranslateMatrix(paddleModel);
+        mvp = proj * view * rotateY(playerPaddle.rotation, playerPaddle.pos) *  generateTranslateMatrix(paddleModel);
         glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, mvp.m);
 
         rgb paddleColor(220, 20, 30);
