@@ -6,8 +6,22 @@
 #include <graphicslibrary.h>
 
 //adjust the viewport to match the new window size
+int windowWidth;
+int windowHeight;
+int mouseMoved = 0;
+
+    // Player Paddle declared here so that mouseCallBack will be able to access it
+    // Paddle is just an ellipse
+    // float paddleRadius = 1.0f;
+    float paddleRadius = 0.5f;
+    // Paddle playerPaddle(paddleRadius, 0, paddleRadius, 0, -5, 0);
+    Paddle playerPaddle(paddleRadius, paddleRadius ,0, 0, 0.01f, 3.5f);
+
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
+    windowWidth = width;
+    windowHeight = height;
 }
 
 //checks keyboard input each frame
@@ -99,6 +113,19 @@ unsigned int createShaderProgram(const char* vertSrc, const char* fragSrc) {
     return program;
 }
 
+
+void mousePosCallback(GLFWwindow* window, double posx, double posy){
+    // Checking the position of mouse by displyaing on screen
+    // std::cout<<"X position: "<<float(posx)<<std::endl;
+    // std::cout<<"Y position: "<<float(posy)<<std::endl;
+    // windowWidth/2, windowHeight/2 gives the current center, firstly we translate the mouse pos relative to the center
+    // Then we invert the sign of posy because in our 3d coordinate system, y increases on going up which is reverse 
+    // of the general convention of the GLFW widnow
+    playerPaddle.mouseCurrentPos = Vec3(posx - windowWidth/2, -1 * (posy - windowHeight/2));
+    mouseMoved = 1;
+}
+
+
 int main() {
     // initialize glfw
     if(!glfwInit()) {
@@ -127,6 +154,9 @@ int main() {
     // register the resize callback
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+    // Set event listener callback for when the mouse's position changes
+    glfwSetCursorPosCallback(window, mousePosCallback);
+
     // initialize glad after setting context
     if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cout << "Failed to initialize GLAD" << std::endl;
@@ -135,7 +165,9 @@ int main() {
     
 
     // size of the rendering window
-    glViewport(0, 0, 800, 600);
+    windowWidth = 800;
+    windowHeight = 600;
+    glViewport(0, 0, windowWidth, windowHeight);
 
 // const GLfloat scale = 1.0;
 
@@ -211,15 +243,9 @@ float netVertices[] = {
     float ballRadius = 0.1f;
     Ellipsoid ballEllipsoid(ballRadius, ballRadius, ballRadius);
 
-    // Paddle is just an ellipse
-    // float paddleRadius = 1.0f;
-    float paddleRadius = 0.5f;
-    // Paddle playerPaddle(paddleRadius, 0, paddleRadius, 0, -5, 0);
-    Paddle playerPaddle(paddleRadius, 0, paddleRadius, 0, 0.01f, 3.5f);
-
     // Paddle for the opponent
     // Paddle opponentPaddleObject(paddleRadius, 0, paddleRadius, 0, 0.01f, -4.5f);
-    Paddle opponentPaddleObject(paddleRadius, 0, paddleRadius, 0, 0.01f, -4.7f);
+    Paddle opponentPaddleObject(paddleRadius, paddleRadius, 0, 0, 0.01f, -4.7f);
 
     // Paddle opponentPaddleObject(paddleRadius, 0, paddleRadius, 0, 1, 0);
 
@@ -255,7 +281,6 @@ float netVertices[] = {
 
     //calls helper defined above to compile both shaders and links them together
     unsigned int shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
-
     while(!glfwWindowShouldClose(window)) {
 
         // check for input
@@ -279,7 +304,7 @@ float netVertices[] = {
         // );
 
         Mat4 view = lookAt(
-            Vec3(0.0f, 8.0f, 9.0f),
+            Vec3(0.0f, 9.0f, 10.0f),
             Vec3(0.0f, 0.0f, 0.0f),
             Vec3(0.0f, 1.0f, 0.0f)
         );
@@ -330,6 +355,16 @@ float netVertices[] = {
         // draw paddle 
         rgb paddleColor(220, 20, 30);
         glUniform4f(colorLoc, paddleColor.r, paddleColor.g, paddleColor.b, 0.8f);
+        if(mouseMoved)
+        {
+            playerPaddle.movePaddle(windowWidth, windowHeight);
+            handle.updateData(playerPaddle.handleVertices, playerPaddle.handleVertexCount * sizeof(GLfloat));
+            paddle.updateData(playerPaddle.points, playerPaddle.size * sizeof(GLfloat));
+            playerPaddle.mousePrevPos = playerPaddle.mouseCurrentPos;
+            mouseMoved = 0;
+            // Re center the position of the mouse so it doesn't fly away
+            glfwSetCursorPos(window, windowWidth/2, windowHeight/2);
+        }
         paddle.VAO::Bind();
         glDrawArrays(GL_LINE_LOOP, 0, (playerPaddle.triangleStartIdx)/3);
         
