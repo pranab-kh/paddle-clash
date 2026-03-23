@@ -394,6 +394,7 @@ int main() {
 
     // make this window the current opengl context
     glfwMakeContextCurrent(window);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // register the resize callback
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -656,6 +657,11 @@ float netVertices[] = {
         glUniform4f(colorLoc, opponentHandleColor.r, opponentHandleColor.g, opponentHandleColor.b, 0.8f);
         opponentHandle.VAO::Bind();
         glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        // update AI movement
+        updateAI(opponentPaddleObject, ballEllipsoid, deltaTime);
+        opponentPaddle.updateData(opponentPaddleObject.points, opponentPaddleObject.size * sizeof(GLfloat));
+        opponentHandle.updateData(opponentPaddleObject.handleVertices, opponentPaddleObject.handleVertexCount * sizeof(GLfloat));
 
         // draw ball
         Vec3 ballModel = ballEllipsoid.pos;

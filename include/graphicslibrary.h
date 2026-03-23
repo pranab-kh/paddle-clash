@@ -6,6 +6,7 @@
 #include "vaovbo.h"
 #include "math3d.h"
 
+
 // RGB struct to convert RGB colors to normalized form
 struct rgb
 {
@@ -170,7 +171,22 @@ struct Paddle: public Ellipsoid{
         // Z axis is reversed so z has negative sign
         hitBoxMin = Vec3(pos.x - radius, pos.y-radius, pos.z - 0.05f);
         hitBoxMax = Vec3(pos.x + radius, pos.y+radius, pos.z + 0.05f);
+
+        // clamp within table boundaries
+        if(pos.x < -2.5f) pos.x = -2.5f;  // left wall
+        if(pos.x >  2.5f) pos.x =  2.5f;  // right wall
+        if(pos.z < 0.1f)  pos.z = 0.1f;   // can't cross net
+        if(pos.z >  4.8f) pos.z =  4.8f;  // can't go past near edge
+
+        updateAllPoints();
     }
+
+    void updateHitboxes(){
+    // Z axis is reversed so z has negative sign
+    hitBoxMin = Vec3(pos.x - radius, pos.y - radius, pos.z + 0.05f);
+    hitBoxMax = Vec3(pos.x + radius, pos.y + radius, pos.z - 0.05f);
+    }
+
 };
 
 
@@ -258,5 +274,22 @@ struct Ball : public Ellipsoid{
         return closest;
     }
 };
+
+
+void updateAI(Paddle& aiPaddle, const Ball& ball, float deltaTime){
+    float aiSpeed = 2.5f;
+    float deadzone = 0.05f;
+
+    if(ball.pos.x > aiPaddle.pos.x + deadzone)
+        aiPaddle.pos.x += aiSpeed * deltaTime;
+    else if(ball.pos.x < aiPaddle.pos.x - deadzone)
+        aiPaddle.pos.x -= aiSpeed * deltaTime;
+
+    if(aiPaddle.pos.x < -2.5f) aiPaddle.pos.x = -2.5f;
+    if(aiPaddle.pos.x >  2.5f) aiPaddle.pos.x =  2.5f;
+
+    aiPaddle.updateAllPoints();
+}
+
 
 #endif
