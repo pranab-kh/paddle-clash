@@ -29,6 +29,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 void processInput(GLFWwindow* window) {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
 }
 
 // Shaders
@@ -139,7 +140,7 @@ int main() {
     }
 
     glfwMakeContextCurrent(window);
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mousePosCallback);
     glfwSetMouseButtonCallback(window, mouseButtonCallback);
@@ -320,7 +321,14 @@ int main() {
         opponentHandle.VAO::Bind();
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        // --- BALL ---
+       
+        // Reset
+        if(glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+            gameState = SERVING;
+            ballEllipsoid.outOfBounds = false;
+            ballEllipsoid.resetToServe(playerPaddle);
+        }
+
         // --- BALL ---
     if(gameState == SERVING) {
         ballEllipsoid.followPaddle(playerPaddle);

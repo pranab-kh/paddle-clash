@@ -196,6 +196,8 @@ struct Ball : public Ellipsoid{
             vel.x *= 0.5f;              // dampen sideways drift
             vel.x += -(playerPaddle.rotation)/25; // x motion comes with rotating the paddle
         }
+
+        
                 
 
          // Collision with opponent paddle
@@ -203,11 +205,9 @@ struct Ball : public Ellipsoid{
          dist = distance(pos, closestPoint);
          if(dist <= radius)
          {
-            // vel.x += closestPoint.x;
-            // vel.x += -(playerPaddle.rotation)/25;
-            vel.z *= -1 * coeffOfRestitutionForPaddle;
-            // Changed from /10 to /5 - Rikison
-            vel.y += -acc.y/5;
+            vel.z = 4.0f;
+            vel.y = 3.0f;
+            vel.x *= 0.5f;
          }
     }
 
