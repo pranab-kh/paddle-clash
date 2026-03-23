@@ -9,5 +9,7 @@ build/
 
 *.dylib
 *.so
-
+src/test.cpp
+src/window.cpp
+src/Unnecessary
 .vscode/
