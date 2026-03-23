@@ -161,6 +161,13 @@ struct Paddle: public Ellipsoid{
 
         incrementCenterCoords(normalizedDisplacement.x, normalizedDisplacement.y);
         // All points are updated according to the center that we just changed
+
+        // clamp within table boundaries
+        if(pos.x < -2.5f) pos.x = -2.5f;  // left wall
+        if(pos.x >  2.5f) pos.x =  2.5f;  // right wall
+        if(pos.z < 0.1f)  pos.z = 0.1f;   // can't cross net
+        if(pos.z >  4.8f) pos.z =  4.8f;  // can't go past near edge
+
         updateAllPoints();
     }
 
