@@ -614,7 +614,7 @@ float netVertices[] = {
         glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, mvp.m);
 
         glUniform4f(colorLoc, paddleColor.r, paddleColor.g, paddleColor.b, 0.8f);
-        if(mouseMoved)
+        if(gamestate == Running && mouseMoved)
         {
             playerPaddle.movePaddle(windowWidth, windowHeight);
             playerPaddle.mousePrevPos = playerPaddle.mouseCurrentPos;
@@ -666,7 +666,9 @@ float netVertices[] = {
         rgb ballColor(254, 170, 45);
         glUniform4f(colorLoc, ballColor.r, ballColor.g, ballColor.b, 0.8f);
         ball.VAO::Bind();
-        ballEllipsoid.updateKinematics(deltaTime, playerPaddle, opponentPaddleObject);
+        if(gamestate == Running) {
+            ballEllipsoid.updateKinematics(deltaTime, playerPaddle, opponentPaddleObject);
+        }
         // ball.updateData(ballEllipsoid.points, ballEllipsoid.size * sizeof(GLfloat));
 
         glDrawArrays(GL_LINE_LOOP, 0, ballEllipsoid.size/3);
