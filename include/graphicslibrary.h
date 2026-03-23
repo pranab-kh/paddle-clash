@@ -61,8 +61,8 @@ struct Ellipsoid{
         updateAllPoints();
     }
 
-    void changeCenterCoords(float x, float y){
-        pos = Vec3(x, y);
+    void changeCenterCoords(float x, float y, float z){
+        pos = Vec3(x, y, z);
     }
 
     void incrementCenterCoords(float x, float y){
@@ -158,51 +158,104 @@ struct Paddle: public Ellipsoid{
         float yScale = abs(displacement.y * 6.5)/(winHeight);
         normalizedDisplacement.x *= xScale;
         normalizedDisplacement.y *= yScale;
-
         incrementCenterCoords(normalizedDisplacement.x, normalizedDisplacement.y);
+        updateHitboxes();
+
         // All points are updated according to the center that we just changed
-        updateAllPoints();
+        // updateAllPoints();
+        // After using the concept of mvp matrix, we don't need to do this thing
     }
 
     void updateHitboxes(){
         // Z axis is reversed so z has negative sign
-        hitBoxMin = (pos.x - radius, pos.y-radius, pos.z + 0.05f);
-        hitBoxMax = (pos.x + radius, pos.y+radius, pos.z - 0.05f);
+        hitBoxMin = Vec3(pos.x - radius, pos.y-radius, pos.z - 0.05f);
+        hitBoxMax = Vec3(pos.x + radius, pos.y+radius, pos.z + 0.05f);
     }
 };
 
 
 struct Ball : public Ellipsoid{
-
-    const float coeffOfRestitution = 0.9;
+    float radius;
+    const float coeffOfRestitutionForTable = 0.9;
+    const float coeffOfRestitutionForPaddle = 2.0;
     Ball(float rad, float h = 0, float k = 0, float l = 0) : Ellipsoid(rad, rad, rad, h, k, l){
-        acc = Vec3(0, -9.8/3, 0);
+        radius = rad;
+        acc = Vec3(0, -9.8, 6);
     }
 
-    // void updateKinematics(float deltaTime, Paddle& playerPaddle, Paddle& opponentPaddle)
-    void updateKinematics(float deltaTime)
+    // void updateKinematics(float deltaTime)
+    void updateKinematics(float deltaTime, Paddle& playerPaddle, Paddle& opponentPaddle)
     {
+        acc.x *= 0.9;
+        acc.z *= 0.9;
         vel = vel + acc * deltaTime;
         pos = pos + vel * deltaTime;
         // The ball bounces back if it hits the table
         if(pos.y <= 0.01)
         {
-            vel.y *= -1 * coeffOfRestitution;
+            pos.y = 0.01;
+            vel.y *= -1 * coeffOfRestitutionForTable;
         }
 
-        // // From here
+        // From here
 
-        // // Collision with the paddles
+        // Collision with the paddles
 
-        // // Collision with the player paddle
-        // // Finding the  point in the hitbox of the paddle which is closest to the ball
-        //  float xClosest, yClosest, zClosest;
-        //  if(pos.x < playerPaddle.hitBoxMin.x)
-        //     xClosest = playerPaddle.hitBoxMin.x;
-        //  if(pos.x > xClosest)
+        // Collision with the player paddle
+        // Finding the  point in the hitbox of the paddle which is closest to the ball
+         Vec3 closestPoint = getClosestPoint(playerPaddle.hitBoxMin, playerPaddle.hitBoxMax);
+         float dist = distance(pos, closestPoint);
+         // If the distance of the closest point and the center of the ball is less than the radius of the ball or equal
+         // Then there's been collision
+         if(dist <= radius)
+         {
+            vel.z *= -1 * coeffOfRestitutionForPaddle;
+            vel.y += -acc.y/2;
+         }
+
+         // Collision with the opponent paddle
+         closestPoint = getClosestPoint(opponentPaddle.hitBoxMin, opponentPaddle.hitBoxMax);
+         dist = distance(pos, closestPoint);
+         if(dist <= radius)
+         {
+            vel.z *= -1 * coeffOfRestitutionForPaddle;
+            vel.y += -acc.y/2;
+         }
+         
+        // updateAllPoints();
+    }
 
 
-        updateAllPoints();
+    Vec3 getClosestPoint(Vec3 hitBoxMin, Vec3 hitBoxMax)
+    {
+        Vec3 closest;
+
+        // For x
+        if(pos.x < hitBoxMin.x)
+            closest.x = hitBoxMin.x;
+        else if(pos.x > hitBoxMax.x)
+            closest.x = hitBoxMax.x;
+        else
+            closest.x = pos.x;
+
+        // For y
+        if(pos.y < hitBoxMin.y)
+            closest.y = hitBoxMin.y;
+        else if(pos.y > hitBoxMax.y)
+            closest.y = hitBoxMax.y;
+        else
+            closest.y = pos.y;
+
+        // In the minimum, bottom left point of the hit box, x and y are minimum but z is maximum and vice versa
+        // For z
+        if(pos.z < hitBoxMin.z)
+            closest.z = hitBoxMin.z;
+        else if(pos.z > hitBoxMax.z)
+            closest.z = hitBoxMax.z;
+        else
+            closest.z = pos.z;
+
+        return closest;
     }
 };
 

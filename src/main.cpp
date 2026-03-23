@@ -15,7 +15,7 @@ int mouseMoved = 0;
     // float paddleRadius = 1.0f;
     float paddleRadius = 0.5f;
     // Paddle playerPaddle(paddleRadius, 0, paddleRadius, 0, -5, 0);
-    Paddle playerPaddle(paddleRadius, paddleRadius ,0, 0, 0.01f, 3.5f);
+    Paddle playerPaddle(paddleRadius, paddleRadius ,0, 0, 0.0f, 0);
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -241,11 +241,11 @@ float netVertices[] = {
 };
     
     float ballRadius = 0.1f;
-    Ball ballEllipsoid(ballRadius, 0, 5, 0);
+    Ball ballEllipsoid(ballRadius, 0, 0, 0);
 
     // Paddle for the opponent
-    // Paddle opponentPaddleObject(paddleRadius, 0, paddleRadius, 0, 0.01f, -4.5f);
-    Paddle opponentPaddleObject(paddleRadius, paddleRadius, 0, 0, 0.01f, -4.7f);
+    // Paddle opponentPaddleObject(paddleRadius, 0, paddleRadius, 0, 0.01f, -4.7f);
+    Paddle opponentPaddleObject(paddleRadius, paddleRadius, 0.0f, 0.0f, 0.0f, 0.0f);
 
     // Paddle opponentPaddleObject(paddleRadius, 0, paddleRadius, 0, 1, 0);
 
@@ -263,15 +263,18 @@ float netVertices[] = {
 
     // VAO VBO for ball
     VAOVBO ball(ballEllipsoid.points, ballEllipsoid.size * sizeof(GLfloat));
+    ballEllipsoid.changeCenterCoords(0, 1, 0);
 
     // Paddle
     VAOVBO paddle(playerPaddle.points, playerPaddle.size * sizeof(GLfloat));
+    playerPaddle.changeCenterCoords(0, 0.1f, 3.5f);
 
     // Paddle Handle
     VAOVBO handle(playerPaddle.handleVertices, playerPaddle.handleVertexCount * sizeof(GLfloat));
 
     // Opponent Paddle
     VAOVBO opponentPaddle(opponentPaddleObject.points, opponentPaddleObject.size * sizeof(GLfloat));
+    opponentPaddleObject.changeCenterCoords(0, 0.1f, -4.7f);
 
     // Opponent Handle
     VAOVBO opponentHandle(opponentPaddleObject.handleVertices, opponentPaddleObject.handleVertexCount * sizeof(GLfloat));
@@ -354,12 +357,16 @@ float netVertices[] = {
 
         // draw paddle 
         rgb paddleColor(220, 20, 30);
+        // In order to do transformations using GPU, we pass the mvp matrix which will be used by GPU to process points faster
+        Vec3 paddleModel = playerPaddle.pos;
+        mvp   =  proj * view * generateTranslateMatrix(paddleModel);
+        mvpLocation = glGetUniformLocation(shaderProgram, "mvp");
+        glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, mvp.m);
+
         glUniform4f(colorLoc, paddleColor.r, paddleColor.g, paddleColor.b, 0.8f);
         if(mouseMoved)
         {
             playerPaddle.movePaddle(windowWidth, windowHeight);
-            handle.updateData(playerPaddle.handleVertices, playerPaddle.handleVertexCount * sizeof(GLfloat));
-            paddle.updateData(playerPaddle.points, playerPaddle.size * sizeof(GLfloat));
             playerPaddle.mousePrevPos = playerPaddle.mouseCurrentPos;
             mouseMoved = 0;
         }
@@ -379,6 +386,11 @@ float netVertices[] = {
 
 
         // draw opponent's paddle 
+        Vec3 oppPaddleModel = opponentPaddleObject.pos;
+        mvp   =  proj * view * generateTranslateMatrix(oppPaddleModel);
+        mvpLocation = glGetUniformLocation(shaderProgram, "mvp");
+        glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, mvp.m);
+
         rgb oppPaddleColor(220, 20, 30);
         glUniform4f(colorLoc, oppPaddleColor.r, oppPaddleColor.g, oppPaddleColor.b, 0.8f);
         opponentPaddle.VAO::Bind();
@@ -396,11 +408,16 @@ float netVertices[] = {
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         // draw ball
+        Vec3 ballModel = ballEllipsoid.pos;
+        mvp   =  proj * view * generateTranslateMatrix(ballModel);
+        mvpLocation = glGetUniformLocation(shaderProgram, "mvp");
+        glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, mvp.m);
+        
         rgb ballColor(254, 170, 45);
         glUniform4f(colorLoc, ballColor.r, ballColor.g, ballColor.b, 0.8f);
         ball.VAO::Bind();
-        ballEllipsoid.updateKinematics(deltaTime);
-        ball.updateData(ballEllipsoid.points, ballEllipsoid.size * sizeof(GLfloat));
+        ballEllipsoid.updateKinematics(deltaTime, playerPaddle, opponentPaddleObject);
+        // ball.updateData(ballEllipsoid.points, ballEllipsoid.size * sizeof(GLfloat));
 
         glDrawArrays(GL_LINE_LOOP, 0, ballEllipsoid.size/3);
 
