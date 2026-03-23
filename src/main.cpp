@@ -173,7 +173,7 @@ int main() {
 
     // VAO VBO for ball
     VAOVBO ball(ballEllipsoid.points, ballEllipsoid.size * sizeof(GLfloat));
-    ballEllipsoid.changeCenterCoords(0, 1, 0);
+    ballEllipsoid.changeCenterCoords(0, 0.5, 0);
 
     // Paddle
     VAOVBO paddle(playerPaddle.points, playerPaddle.size * sizeof(GLfloat));

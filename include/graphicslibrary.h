@@ -160,12 +160,12 @@ struct Paddle: public Ellipsoid{
 
 struct Ball : public Ellipsoid{
     float radius;
-    const float coeffOfRestitutionForTable = 0.9;
-    const float coeffOfRestitutionForPaddle = 2.0;
+    const float coeffOfRestitutionForTable = 0.3;
+    const float coeffOfRestitutionForPaddle = 1.2;
     
     Ball(float rad, float h = 0, float k = 0, float l = 0) : Ellipsoid(rad, rad, rad, h, k, l){
         radius = rad;
-        acc = Vec3(0, -9.8, 2);
+        acc = Vec3(0, -9.8, 5);
     }
 
     void updateKinematics(float deltaTime, Paddle& playerPaddle, Paddle& opponentPaddle)
@@ -188,7 +188,7 @@ struct Ball : public Ellipsoid{
          if(dist <= radius)
          {
             vel.z *= -1 * coeffOfRestitutionForPaddle;
-            vel.y += -acc.y/2;
+            vel.y += -acc.y/10;
          }
 
          // Collision with opponent paddle
@@ -197,7 +197,7 @@ struct Ball : public Ellipsoid{
          if(dist <= radius)
          {
             vel.z *= -1 * coeffOfRestitutionForPaddle;
-            vel.y += -acc.y/2;
+            vel.y += -acc.y/10;
          }
     }
 
