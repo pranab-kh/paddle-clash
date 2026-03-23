@@ -163,7 +163,6 @@ struct Paddle: public Ellipsoid{
         updateHitboxes();
 
         // All points are updated according to the center that we just changed
-<<<<<<< HEAD
 
         // clamp within table boundaries
         if(pos.x < -2.5f) pos.x = -2.5f;  // left wall
@@ -171,25 +170,16 @@ struct Paddle: public Ellipsoid{
         if(pos.z < 0.1f)  pos.z = 0.1f;   // can't cross net
         if(pos.z >  4.8f) pos.z =  4.8f;  // can't go past near edge
 
-        updateAllPoints();
+        // updateAllPoints();
     }
 
     void updateHitboxes(){
     // Z axis is reversed so z has negative sign
     hitBoxMin = Vec3(pos.x - radius, pos.y - radius, pos.z + 0.05f);
     hitBoxMax = Vec3(pos.x + radius, pos.y + radius, pos.z - 0.05f);
-=======
         // updateAllPoints();
         // After using the concept of mvp matrix, we don't need to do this thing
     }
-
-    void updateHitboxes(){
-        // Z axis is reversed so z has negative sign
-        hitBoxMin = Vec3(pos.x - radius, pos.y-radius, pos.z - 0.05f);
-        hitBoxMax = Vec3(pos.x + radius, pos.y+radius, pos.z + 0.05f);
->>>>>>> mostbasics
-    }
-
 };
 
 
@@ -291,7 +281,7 @@ void updateAI(Paddle& aiPaddle, const Ball& ball, float deltaTime){
     if(aiPaddle.pos.x < -2.5f) aiPaddle.pos.x = -2.5f;
     if(aiPaddle.pos.x >  2.5f) aiPaddle.pos.x =  2.5f;
 
-    aiPaddle.updateAllPoints();
+    // aiPaddle.updateAllPoints();
 }
 
 

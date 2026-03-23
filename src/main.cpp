@@ -293,11 +293,7 @@ float netVertices[] = {
         float currentFrame = (float)glfwGetTime();
         deltaTime = currentFrame - timeOfPreviousFrame;
         timeOfPreviousFrame = currentFrame;
- 
 
-        float timeOfCurrentFrame = glfwGetTime();
-        deltaTime = timeOfCurrentFrame - timeOfPreviousFrame;
-        timeOfPreviousFrame = timeOfCurrentFrame;
         // check for input
         processInput(window);
 
@@ -415,8 +411,6 @@ float netVertices[] = {
 
         // update AI movement
         updateAI(opponentPaddleObject, ballEllipsoid, deltaTime);
-        opponentPaddle.updateData(opponentPaddleObject.points, opponentPaddleObject.size * sizeof(GLfloat));
-        opponentHandle.updateData(opponentPaddleObject.handleVertices, opponentPaddleObject.handleVertexCount * sizeof(GLfloat));
 
         // draw ball
         Vec3 ballModel = ballEllipsoid.pos;
