@@ -165,7 +165,7 @@ struct Ball : public Ellipsoid{
     
     Ball(float rad, float h = 0, float k = 0, float l = 0) : Ellipsoid(rad, rad, rad, h, k, l){
         radius = rad;
-        acc = Vec3(0, -9.8, 3);
+        acc = Vec3(0, -9.8, 2);
     }
 
     void updateKinematics(float deltaTime, Paddle& playerPaddle, Paddle& opponentPaddle)
