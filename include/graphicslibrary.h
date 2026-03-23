@@ -23,6 +23,7 @@ struct Ellipsoid{
     GLfloat a,b,c; 
     Vec3 pos;
     Vec3 vel;
+    Vec3 acc;
     GLfloat *points;
     // Number of horizontal sections
     const int stacks = 400;
@@ -156,6 +157,33 @@ struct Paddle: public Ellipsoid{
 
         incrementCenterCoords(normalizedDisplacement.x, normalizedDisplacement.y);
         // All points are updated according to the center that we just changed
+        updateAllPoints();
+    }
+};
+
+
+struct Ball : public Ellipsoid{
+
+    const float coeffOfRestitution = 0.9;
+    Ball(float rad, float h = 0, float k = 0, float l = 0) : Ellipsoid(rad, rad, rad, h, k, l){
+        acc = Vec3(0, -9.8/3, 0);
+    }
+
+    void updateKinematics(float deltaTime, Paddle& playerPaddle, Paddle& opponentPaddle)
+    {
+        vel = vel + acc * deltaTime;
+        pos = pos + vel * deltaTime;
+        // The ball bounces back if it hits the table
+        if(pos.y <= 0.01)
+        {
+            vel.y *= -1 * coeffOfRestitution;
+        }
+
+        // Collision with the rackets
+
+        // Collision with the player paddle
+        
+
         updateAllPoints();
     }
 };

@@ -241,7 +241,7 @@ float netVertices[] = {
 };
     
     float ballRadius = 0.1f;
-    Ellipsoid ballEllipsoid(ballRadius, ballRadius, ballRadius);
+    Ball ballEllipsoid(ballRadius, 0, 5, 0);
 
     // Paddle for the opponent
     // Paddle opponentPaddleObject(paddleRadius, 0, paddleRadius, 0, 0.01f, -4.5f);
@@ -281,8 +281,14 @@ float netVertices[] = {
 
     //calls helper defined above to compile both shaders and links them together
     unsigned int shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
+    // In order to calculate the time between each frame execution to ensure that velocity doesn't depend on fps
+    float timeOfPreviousFrame = 0;
+    float deltaTime = 0;
     while(!glfwWindowShouldClose(window)) {
 
+        float timeOfCurrentFrame = glfwGetTime();
+        deltaTime = timeOfCurrentFrame - timeOfPreviousFrame;
+        timeOfPreviousFrame = timeOfCurrentFrame;
         // check for input
         processInput(window);
 
@@ -346,12 +352,6 @@ float netVertices[] = {
         net.VAO::Bind();
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        // draw ball
-        rgb ballColor(254, 170, 45);
-        glUniform4f(colorLoc, ballColor.r, ballColor.g, ballColor.b, 0.8f);
-        ball.VAO::Bind();
-        glDrawArrays(GL_LINE_LOOP, 0, ballEllipsoid.size/3);
-
         // draw paddle 
         rgb paddleColor(220, 20, 30);
         glUniform4f(colorLoc, paddleColor.r, paddleColor.g, paddleColor.b, 0.8f);
@@ -396,6 +396,15 @@ float netVertices[] = {
         glUniform4f(colorLoc, opponentHandleColor.r, opponentHandleColor.g, opponentHandleColor.b, 0.8f);
         opponentHandle.VAO::Bind();
         glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        // draw ball
+        rgb ballColor(254, 170, 45);
+        glUniform4f(colorLoc, ballColor.r, ballColor.g, ballColor.b, 0.8f);
+        ball.VAO::Bind();
+        ballEllipsoid.updateKinematics(deltaTime);
+        ball.updateData(ballEllipsoid.points, ballEllipsoid.size * sizeof(GLfloat));
+
+        glDrawArrays(GL_LINE_LOOP, 0, ballEllipsoid.size/3);
 
 
         // swap front and back buffers
