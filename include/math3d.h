@@ -48,6 +48,11 @@ inline Vec3 normalize(const Vec3& v) {
     return {v.x/m, v.y/m, v.z/m};
 }
 
+inline float distance(const Vec3& v1, const Vec3& v2)
+{
+    return sqrt(pow(v2.x-v1.x, 2) + pow(v2.y-v1.y, 2) + pow(v2.z-v1.z, 2));
+}
+
 
 struct Vec4 {
     float x, y, z, w;
@@ -103,13 +108,13 @@ inline Mat4 identity() {
     return M;
 }
 
-// All matrix transformations are used as M * transformation(arguments) where transform where transformation = translate, scale or rotate
-inline Mat4 translate(float tx, float ty, float tz) {
-    Mat4 M = identity();
-    M.at(0,3) = tx;
-    M.at(1,3) = ty;
-    M.at(2,3) = tz;
-    return M;
+inline Mat4 generateTranslateMatrix(Vec3 v)
+{
+    Mat4 mat = identity();
+    mat.m[4*3 + 0] = v.x;
+    mat.m[4*3 + 1] = v.y;
+    mat.m[4*3 + 2] = v.z;
+    return mat;
 }
 
 
@@ -151,6 +156,7 @@ inline Mat4 rotateZ(float angle) {
     M.at(1,1) =  c;
     return M;
 }
+
 
 inline float toRadians(float degrees) {
     return degrees * (3.14159265358979f / 180.0f);
