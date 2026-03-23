@@ -338,10 +338,8 @@ int main() {
         ballEllipsoid.followPaddle(playerPaddle);
     } else {
         ballEllipsoid.updateKinematics(deltaTime, playerPaddle, opponentPaddleObject);
-        //added
-        ballEllipsoid.updateKinematics(deltaTime, playerPaddle, opponentPaddleObject);
-        std::cout << "ball z: " << ballEllipsoid.pos.z << std::endl;
-        //end add
+        
+        
         if(ballEllipsoid.outOfBounds) {
             if(ballEllipsoid.playerScored) {
                 playerScore++;

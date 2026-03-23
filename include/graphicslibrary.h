@@ -172,12 +172,13 @@ struct Ball : public Ellipsoid{
     Ball(float rad, float h = 0, float k = 0, float l = 0) : Ellipsoid(rad, rad, rad, h, k, l){
         radius = rad;
         acc = Vec3(0, -9.8, 5);
+        vel = Vec3(0, 3.0f, -4.0f); 
     }
 
     void updateKinematics(float deltaTime, Paddle& playerPaddle, Paddle& opponentPaddle)
     {
-        acc.x *= 0.9;
-        acc.z *= 0.9;
+        acc.x *= 0.9f;
+        acc.z *= 0.9f;
         vel = vel + acc * deltaTime;
         pos = pos + vel * deltaTime;
         
@@ -193,7 +194,7 @@ struct Ball : public Ellipsoid{
         float dist = distance(pos, closestPoint);
         if(dist <= radius)
         {
-            vel.z = -4.0f;              // always shoot toward opponent on hit
+            vel.z = -4.5f;              // always shoot toward opponent on hit
             vel.y = 5.0f;               // consistent upward arc (changed from 3 to 5!!!)
             vel.x *= 0.5f;              // dampen sideways drift
             vel.x += -(playerPaddle.rotation)/25; // x motion comes with rotating the paddle
@@ -244,7 +245,7 @@ struct Ball : public Ellipsoid{
 
     void resetToServe(const Paddle& paddle) {
         pos = Vec3(paddle.pos.x, paddle.pos.y + radius + 0.3f, paddle.pos.z);
-        vel = Vec3(0, -1.0f, -3.5f);  // slight drop + (not so) light push toward opponent
+        vel = Vec3(0, 3.0f, -4.0f);  // upward arc toward opponent
         acc = Vec3(0, -9.8f, 0);
     }
 
