@@ -150,6 +150,7 @@ int main() {
 
     // make this window the current opengl context
     glfwMakeContextCurrent(window);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // register the resize callback
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
