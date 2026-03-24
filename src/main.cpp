@@ -454,6 +454,15 @@ void renderEasyText(const char* text, float centerX, float centerY, float scale,
     glBindVertexArray(0);
 }
 
+// Render score display during gameplay
+void renderScoreDisplay(int colorLoc, int screenWidth, int screenHeight, int playerScore, int opponentScore) {
+    // Create score text: "You: X  AI: Y"
+    std::string scoreText = "You: " + std::to_string(playerScore) + "  AI: " + std::to_string(opponentScore);
+    
+    // Render at top center (position: 0.0 center X, 0.95 top Y, scale 5.0 for larger text)
+    renderEasyText(scoreText.c_str(), 0.0f, 0.95f, 5.0f, colorLoc, screenWidth, screenHeight);
+}
+
 // Render the entire pause menu with overlay + buttons + text labels
 void renderPauseMenu(int colorLoc, int mvpLocation, PauseMenuOption selected, int screenWidth, int screenHeight, GameEndState endState) {
     // Draw the dark overlay first
@@ -794,6 +803,23 @@ int main() {
     glUniform4f(colorLoc, ballColor.r, ballColor.g, ballColor.b, 0.8f);
     ball.VAO::Bind();
     glDrawArrays(GL_LINE_LOOP, 0, ballEllipsoid.size/3);
+
+        // Render score display during gameplay (before pause menu)
+        if(state == RUNNING) {
+            // Switch to orthographic projection for 2D UI
+            Mat4 orthoModel = identity();
+            Mat4 orthoView = identity();
+            Mat4 orthoProj = identity();
+            Mat4 orthoMVP = orthoProj * orthoView * orthoModel;
+            glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, orthoMVP.m);
+            
+            renderScoreDisplay(colorLoc, width, height, playerScore, opponentScore);
+            
+            // Restore 3D perspective for next frame
+            mvp = proj * view * model;
+            glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, mvp.m);
+        }
+
         // Render pause menu overlay if paused (on top of game)
         if(state == PAUSED) {
             int mvpLocation = glGetUniformLocation(shaderProgram, "mvp");
