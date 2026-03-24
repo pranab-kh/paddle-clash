@@ -178,6 +178,8 @@ struct Ball : public Ellipsoid{
     bool outOfBounds = false;
     bool playerScored = false;   // ball went past opponent (z < -5)
     bool opponentScored = false; // ball went past player (z > 5)
+    bool collisionWithPaddle = false;  // ball hit a paddle this frame
+    bool collisionWithTable = false;   // ball hit the table this frame
     const int racketSpeedScalar = 2;
     
     Ball(float rad, float h = 0, float k = 0, float l = 0) : Ellipsoid(rad, rad, rad, h, k, l){
@@ -199,6 +201,7 @@ struct Ball : public Ellipsoid{
         {
             pos.y = 0.01;
             vel.y *= -1 * coeffOfRestitutionForTable;
+            collisionWithTable = true;
         }
 
         // Collision with player paddle
@@ -212,6 +215,7 @@ struct Ball : public Ellipsoid{
             vel.x += -(playerPaddle.rotation)/25; // x motion comes with rotating the paddle
             acc.y -= abs(playerPaddle.normalizedDisplacement.y + playerPaddle.normalizedDisplacement.x) * racketSpeedScalar;
             acc.z += playerPaddle.normalizedDisplacement.x * racketSpeedScalar;
+            collisionWithPaddle = true;
         }
 
         
@@ -225,6 +229,7 @@ struct Ball : public Ellipsoid{
             vel.z = 6.0f;
             vel.y = 5.0f;
             vel.x *= 0.5f;
+            collisionWithPaddle = true;
          }
 
          // Out of bounds check
