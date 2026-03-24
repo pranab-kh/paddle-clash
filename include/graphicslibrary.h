@@ -17,6 +17,8 @@ struct rgb
     }
 };
 
+const int g = -9.8; // Acceleration due to gravity
+
 // Ellipsoid for ball and racket
 struct Ellipsoid{
     //Length of semi axes and the center
@@ -85,6 +87,7 @@ struct Paddle: public Ellipsoid{
     Vec3 hitBoxMin;
     Vec3 hitBoxMax;
     float rotation;
+    Vec3 normalizedDisplacement;
 
     Paddle(GLfloat a, GLfloat b, GLfloat c, GLfloat h = 0, GLfloat k = 0, GLfloat l = 0) : Ellipsoid(a, b, c, h, k, l){
             mousePrevPos = Vec3(0, 0.01, 3.5);
@@ -136,38 +139,46 @@ struct Paddle: public Ellipsoid{
         Vec3 displacement = (mouseCurrentPos - mousePrevPos);
         if(magnitude(displacement) == 0) return;
 
-        Vec3 normalizedDisplacement = normalize(displacement);
-        float xScale = abs(displacement.x * 6.5)/(winWidth);
-        float yScale = abs(displacement.y * 6.5)/(winHeight);
+        normalizedDisplacement = normalize(displacement);
+        float xScale = abs(displacement.x * 8.5)/(winWidth);
+        float yScale = abs(displacement.y * 8.5)/(winHeight);
         normalizedDisplacement.x *= xScale;
         normalizedDisplacement.y *= yScale;
         
         incrementCenterCoords(normalizedDisplacement.x, normalizedDisplacement.y);
+    
 
         // Clamping within table boundaries (Merged from AI branch)
-        if(pos.x < -2.5f) pos.x = -2.5f;  // left wall
-        if(pos.x >  2.5f) pos.x =  2.5f;  // right wall
+        if(pos.x < -4.5f) pos.x = -4.5f;  // left wall
+        if(pos.x >  4.5f) pos.x =  4.5f;  // right wall
         if(pos.z < 0.1f)  pos.z = 0.1f;   // can't cross net
-        if(pos.z >  4.8f) pos.z =  4.8f;  // can't go past near edge
+        if(pos.z >  6.8f) pos.z =  6.8f;  // can't go past near edge
 
         updateHitboxes(); // Crucial for collision detection!
     }
 
     void updateHitboxes(){
-        // Hitbox logic from working branch
-        float hitboxscale = 1;
-        hitBoxMin = Vec3(pos.x - radius, pos.y-radius, pos.z - 0.05f);
-        hitBoxMax = Vec3(pos.x + radius, pos.y+radius, pos.z + 0.05f) * hitboxscale;
-    }
+    float hitboxscale = 1.5f;
+    
+    // Scale the dimensions, not the world positions
+    float scaledRadius = radius * hitboxscale;
+    float scaledThickness = 0.05f * hitboxscale; 
+
+    // Add and subtract the scaled dimensions from the center point
+    hitBoxMin = Vec3(pos.x - scaledRadius, pos.y - scaledRadius, pos.z - scaledThickness);
+    hitBoxMax = Vec3(pos.x + scaledRadius, pos.y + scaledRadius, pos.z + scaledThickness);
+}
 };
 
 struct Ball : public Ellipsoid{
     float radius;
-    const float coeffOfRestitutionForTable = 0.3;
+    const float coeffOfRestitutionForTable = 0.95;
     const float coeffOfRestitutionForPaddle = 1.2;
+    float accY = 0;
     bool outOfBounds = false;
     bool playerScored = false;   // ball went past opponent (z < -5)
     bool opponentScored = false; // ball went past player (z > 5)
+    const int racketSpeedScalar = 2;
     
     Ball(float rad, float h = 0, float k = 0, float l = 0) : Ellipsoid(rad, rad, rad, h, k, l){
         radius = rad;
@@ -179,11 +190,12 @@ struct Ball : public Ellipsoid{
     {
         acc.x *= 0.9f;
         acc.z *= 0.9f;
+        acc.y = g + accY;
         vel = vel + acc * deltaTime;
         pos = pos + vel * deltaTime;
         
         // Bounce off table
-        if(pos.y <= 0.01)
+        if(pos.y <= 0.01 && pos.x >= -3.0f && pos.x <= 3.0f && pos.z >= -5.0f && pos.z <= 5.0f)
         {
             pos.y = 0.01;
             vel.y *= -1 * coeffOfRestitutionForTable;
@@ -194,10 +206,12 @@ struct Ball : public Ellipsoid{
         float dist = distance(pos, closestPoint);
         if(dist <= radius)
         {
-            vel.z = -4.5f;              // always shoot toward opponent on hit
-            vel.y = 5.0f;               // consistent upward arc (changed from 3 to 5!!!)
+            vel.z = -7.5f;             // always shoot toward opponent on hit
+            vel.y = 2.0f;               // consistent upward arc (changed from 3 to 5!!!)
             vel.x *= 0.5f;              // dampen sideways drift
             vel.x += -(playerPaddle.rotation)/25; // x motion comes with rotating the paddle
+            acc.y -= abs(playerPaddle.normalizedDisplacement.y + playerPaddle.normalizedDisplacement.x) * racketSpeedScalar;
+            acc.z += playerPaddle.normalizedDisplacement.x * racketSpeedScalar;
         }
 
         
@@ -208,17 +222,17 @@ struct Ball : public Ellipsoid{
          dist = distance(pos, closestPoint);
          if(dist <= radius)
          {
-            vel.z = 4.0f;
-            vel.y = 3.0f;
+            vel.z = 6.0f;
+            vel.y = 5.0f;
             vel.x *= 0.5f;
          }
 
          // Out of bounds check
-         if(pos.z >= 5.0f) {
+         if(pos.z >= 7.0f) {
              outOfBounds = true;
              opponentScored = true;
          }
-         if(pos.z <= -5.0f) {
+         if(pos.z <= -7.0f) {
              outOfBounds = true;
              playerScored = true;
          }
@@ -245,7 +259,7 @@ struct Ball : public Ellipsoid{
 
     void resetToServe(const Paddle& paddle) {
         pos = Vec3(paddle.pos.x, paddle.pos.y + radius + 0.3f, paddle.pos.z);
-        vel = Vec3(0, 3.0f, -4.0f);  // upward arc toward opponent
+        vel = Vec3(vel.x - (paddle.rotation)/20, -3.0f, -4.0 - paddle.normalizedDisplacement.x * racketSpeedScalar * 3);  // upward arc toward opponent
         acc = Vec3(0, -9.8f, 0);
     }
 

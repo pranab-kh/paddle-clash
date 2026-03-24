@@ -10,6 +10,7 @@
 int windowWidth;
 int windowHeight;
 int mouseMoved = 0;
+bool firstMouseMove = true;
 // Default rotation unit in degrees
 const int rotationUnit = 5; 
 
@@ -100,6 +101,11 @@ unsigned int createShaderProgram(const char* vertSrc, const char* fragSrc) {
 
 void mousePosCallback(GLFWwindow* window, double posx, double posy){
     playerPaddle.mouseCurrentPos = Vec3(posx - windowWidth/2, -1 * (posy - windowHeight/2));
+
+        if(firstMouseMove) {
+        playerPaddle.mousePrevPos = playerPaddle.mouseCurrentPos;  
+        firstMouseMove = false;                           
+    }
     mouseMoved = 1;
 }
 
@@ -111,17 +117,26 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
     }
 }
 
+void cursorEnterCallback(GLFWwindow* window, int entered) {
+    if (entered) {
+        // The cursor just entered the window
+        // Reset the flag so the next mouse movement doesn't cause a warp.
+        firstMouseMove = true;
+    }
+}
+
 void keyPressCallback(GLFWwindow* window, int key, int scancode, int action, int mods){
     // Rotation towards left
-    if(key == GLFW_KEY_A) // && playerPaddle.rotation <= -30)
+    if(key == GLFW_KEY_A && playerPaddle.rotation > -30)
     {
         playerPaddle.rotation -= rotationUnit;
     }
     // Rotation towards right
-    else if(key == GLFW_KEY_D) //  && playerPaddle.rotation >= 30)
+    else if(key == GLFW_KEY_D  && playerPaddle.rotation < 30)
     {
         playerPaddle.rotation += rotationUnit;
     }
+    // std::cout<<"Rotation unit: "<<playerPaddle.rotation;
 }
 
 int main() {
@@ -144,11 +159,12 @@ int main() {
     }
 
     glfwMakeContextCurrent(window);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mousePosCallback);
     glfwSetMouseButtonCallback(window, mouseButtonCallback);
     glfwSetKeyCallback(window, keyPressCallback);
+    glfwSetCursorEnterCallback(window, cursorEnterCallback);
 
     if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cout << "Failed to initialize GLAD" << std::endl;
