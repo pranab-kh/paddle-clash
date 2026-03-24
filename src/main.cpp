@@ -49,9 +49,41 @@ enum PauseMenuOption
     New_Game,
     Quit
 };
+enum GameEndState
+{
+    IN_PROGRESS,
+    PLAYER_WON,
+    OPPONENT_WON
+};
+
+// Check win condition according to official table tennis rules
+// First to 11 points wins, but must win by 2 points after 10-10 deuce
+GameEndState checkWinCondition(int playerScore, int opponentScore) {
+    // If both players are below 10, continue playing
+    if(playerScore < 10 && opponentScore < 10) {
+        return IN_PROGRESS;
+    }
+    
+    // If one player reached 11 and opponent is below 10, that player wins
+    if(playerScore >= 11 && opponentScore < 10) {
+        return PLAYER_WON;
+    }
+    if(opponentScore >= 11 && playerScore < 10) {
+        return OPPONENT_WON;
+    }
+    
+    // Deuce situation: both at 10+ points, must win by 2
+    if(playerScore >= 10 && opponentScore >= 10) {
+        if(playerScore - opponentScore >= 2) return PLAYER_WON;
+        if(opponentScore - playerScore >= 2) return OPPONENT_WON;
+    }
+    
+    return IN_PROGRESS;
+}
 GameState gamestate = SERVING;    // Handles SERVING and PLAYING states
 GameState state = RUNNING;         // Handles RUNNING and PAUSED states
 PauseMenuOption selectedMenuOption = Resume;
+GameEndState gameEndState = IN_PROGRESS;
 bool escapeKeyPressed = false;
 
 // Minimal header-only audio (miniaudio): looping background music from file.
@@ -113,7 +145,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 }
 
 //checks keyboard input each frame
-void processInput(GLFWwindow* window, GameState& state, PauseMenuOption& selectedOption) {
+void processInput(GLFWwindow* window, GameState& state, PauseMenuOption& selectedOption, GameEndState& endState, GameState& gamestate, Ball& ball, Paddle& player, Paddle& opponent, int& playerScore, int& opponentScore, bool& playerServing, float& serveTimer) {
     bool escapePressed = glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS;
     
     // Toggle pause on ESC (with debounce)
@@ -151,8 +183,25 @@ void processInput(GLFWwindow* window, GameState& state, PauseMenuOption& selecte
             if(selectedOption == Resume) {
                 state = RUNNING;
             } else if(selectedOption == New_Game) {
-                // TODO: Reset game here
+                // Reset game for new match
+                playerScore = 0;
+                opponentScore = 0;
+                endState = IN_PROGRESS;
+                gamestate = SERVING;
                 state = RUNNING;
+                playerServing = isPlayerServing();
+                serveTimer = 0.0f;
+                ball.outOfBounds = false;
+                
+                if(playerServing) {
+                    ball.resetToServe(player);
+                } else {
+                    ball.resetToServe(opponent);
+                }
+                
+                // Update window title with reset score
+                std::string title = "Table Tennis  |  You: " + std::to_string(playerScore) + "  AI: " + std::to_string(opponentScore);
+                glfwSetWindowTitle(window, title.c_str());
             } else if(selectedOption == Quit) {
                 glfwSetWindowShouldClose(window, true);
             }
@@ -406,23 +455,33 @@ void renderEasyText(const char* text, float centerX, float centerY, float scale,
 }
 
 // Render the entire pause menu with overlay + buttons + text labels
-void renderPauseMenu(int colorLoc, int mvpLocation, PauseMenuOption selected, int screenWidth, int screenHeight) {
+void renderPauseMenu(int colorLoc, int mvpLocation, PauseMenuOption selected, int screenWidth, int screenHeight, GameEndState endState) {
     // Draw the dark overlay first
     renderOverlay(colorLoc, mvpLocation);
+
+    // Display status message at top
+    const float statusScale = 3.0f;
+    if(endState == PLAYER_WON) {
+        renderEasyText("YOU WIN!", 0.0f, 0.5f, statusScale, colorLoc, screenWidth, screenHeight);
+    } else if(endState == OPPONENT_WON) {
+        renderEasyText("YOU LOST", 0.0f, 0.5f, statusScale, colorLoc, screenWidth, screenHeight);
+    } else {
+        renderEasyText("GAME PAUSED", 0.0f, 0.5f, statusScale, colorLoc, screenWidth, screenHeight);
+    }
 
     // Draw three menu buttons (vertically stacked)
     float buttonWidth = 0.4f;
     float buttonHeight = 0.12f;
 
-    renderMenuButton(0.0f,  0.3f, buttonWidth, buttonHeight, (selected == Resume),   colorLoc);
-    renderMenuButton(0.0f,  0.0f, buttonWidth, buttonHeight, (selected == New_Game), colorLoc);
-    renderMenuButton(0.0f, -0.3f, buttonWidth, buttonHeight, (selected == Quit),     colorLoc);
+    renderMenuButton(0.0f,  0.2f, buttonWidth, buttonHeight, (selected == Resume),   colorLoc);
+    renderMenuButton(0.0f, -0.1f, buttonWidth, buttonHeight, (selected == New_Game), colorLoc);
+    renderMenuButton(0.0f, -0.4f, buttonWidth, buttonHeight, (selected == Quit),     colorLoc);
     
     // Larger text scale for better readability.
     const float labelScale = 2.6f;
-    renderEasyText("RESUME",   0.0f,  0.3f, labelScale, colorLoc, screenWidth, screenHeight);
-    renderEasyText("NEW GAME", 0.0f,  0.0f, labelScale, colorLoc, screenWidth, screenHeight);
-    renderEasyText("QUIT",     0.0f, -0.3f, labelScale, colorLoc, screenWidth, screenHeight);
+    renderEasyText("RESUME",   0.0f,  0.2f, labelScale, colorLoc, screenWidth, screenHeight);
+    renderEasyText("NEW GAME", 0.0f, -0.1f, labelScale, colorLoc, screenWidth, screenHeight);
+    renderEasyText("QUIT",     0.0f, -0.4f, labelScale, colorLoc, screenWidth, screenHeight);
 }
 
 int main() {
@@ -550,7 +609,7 @@ int main() {
         timeOfPreviousFrame = currentFrame;
 
         // check for input
-        processInput(window, state, selectedMenuOption);
+        processInput(window, state, selectedMenuOption, gameEndState, gamestate, ballEllipsoid, playerPaddle, opponentPaddleObject, playerScore, opponentScore, playerServing, serveTimer);
 
         glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -699,17 +758,25 @@ int main() {
                     ballEllipsoid.opponentScored = false;
                 }
                 ballEllipsoid.outOfBounds = false;
-                gamestate = SERVING;
                 
-                // Update who serves next
-                playerServing = isPlayerServing();
-                serveTimer = 0.0f;
+                // Check for winner
+                gameEndState = checkWinCondition(playerScore, opponentScore);
                 
-                // Reset ball to correct serving paddle
-                if(playerServing) {
-                    ballEllipsoid.resetToServe(playerPaddle);
+                if(gameEndState == IN_PROGRESS) {
+                    // Game continues, prepare next serve
+                    gamestate = SERVING;
+                    playerServing = isPlayerServing();
+                    serveTimer = 0.0f;
+                    
+                    // Reset ball to correct serving paddle
+                    if(playerServing) {
+                        ballEllipsoid.resetToServe(playerPaddle);
+                    } else {
+                        ballEllipsoid.resetToServe(opponentPaddleObject);
+                    }
                 } else {
-                    ballEllipsoid.resetToServe(opponentPaddleObject);
+                    // Game over - pause the game
+                    state = PAUSED;
                 }
 
                 // Update window title with new score
@@ -731,7 +798,7 @@ int main() {
         if(state == PAUSED) {
             int mvpLocation = glGetUniformLocation(shaderProgram, "mvp");
             int colorLoc = glGetUniformLocation(shaderProgram, "color");
-            renderPauseMenu(colorLoc, mvpLocation, selectedMenuOption, width, height);
+            renderPauseMenu(colorLoc, mvpLocation, selectedMenuOption, width, height, gameEndState);
         }
 
         glfwSwapBuffers(window);
