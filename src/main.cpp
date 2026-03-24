@@ -17,6 +17,16 @@ const int rotationUnit = 5;
 
 int playerScore = 0;
 int opponentScore = 0;
+bool playerServing = true;  // Track whose turn it is to serve
+float serveTimer = 0.0f;    // Timer for opponent serve delay
+const float SERVE_DELAY = 1.0f;  // 1 second delay before opponent serves
+
+// Helper function to determine who should serve
+bool isPlayerServing() {
+    int totalPoints = playerScore + opponentScore;
+    // Every 2 points, switch server (0-1: player, 2-3: opponent, 4-5: player, etc.)
+    return (totalPoints / 2) % 2 == 0;
+}
 
 // Player Paddle declared here so that mouseCallBack will be able to access it
 float paddleRadius = 0.5f;
@@ -233,7 +243,7 @@ void mousePosCallback(GLFWwindow* window, double posx, double posy){
 
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
     if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        if(gamestate == SERVING) {
+        if(gamestate == SERVING && playerServing) {
             gamestate = PLAYING;
         }
     }
@@ -506,7 +516,14 @@ int main() {
     // VAO VBO for ball
     VAOVBO ball(ballEllipsoid.points, ballEllipsoid.size * sizeof(GLfloat));
     ballEllipsoid.changeCenterCoords(0, 0.5, 0);
-    ballEllipsoid.resetToServe(playerPaddle);
+    
+    // Initialize serving state
+    playerServing = isPlayerServing();
+    if(playerServing) {
+        ballEllipsoid.resetToServe(playerPaddle);
+    } else {
+        ballEllipsoid.resetToServe(opponentPaddleObject);
+    }
 
 
     // Paddle
@@ -636,13 +653,32 @@ int main() {
         if(glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
             gamestate = SERVING;
             ballEllipsoid.outOfBounds = false;
-            ballEllipsoid.resetToServe(playerPaddle);
+            playerServing = isPlayerServing();
+            serveTimer = 0.0f;
+            
+            if(playerServing) {
+                ballEllipsoid.resetToServe(playerPaddle);
+            } else {
+                ballEllipsoid.resetToServe(opponentPaddleObject);
+            }
         }
 
         // --- BALL ---
     if(state == RUNNING) {
         if(gamestate == SERVING) {
-            ballEllipsoid.followPaddle(playerPaddle);
+            // Ball follows whoever is serving
+            if(playerServing) {
+                ballEllipsoid.followPaddle(playerPaddle);
+            } else {
+                ballEllipsoid.followPaddle(opponentPaddleObject);
+                
+                // AI auto-serves after delay
+                serveTimer += deltaTime;
+                if(serveTimer >= SERVE_DELAY) {
+                    gamestate = PLAYING;
+                    serveTimer = 0.0f;
+                }
+            }
         } else {
             ballEllipsoid.updateKinematics(deltaTime, playerPaddle, opponentPaddleObject);
         
@@ -664,7 +700,17 @@ int main() {
                 }
                 ballEllipsoid.outOfBounds = false;
                 gamestate = SERVING;
-                ballEllipsoid.resetToServe(playerPaddle);
+                
+                // Update who serves next
+                playerServing = isPlayerServing();
+                serveTimer = 0.0f;
+                
+                // Reset ball to correct serving paddle
+                if(playerServing) {
+                    ballEllipsoid.resetToServe(playerPaddle);
+                } else {
+                    ballEllipsoid.resetToServe(opponentPaddleObject);
+                }
 
                 // Update window title with new score
                 std::string title = "Table Tennis  |  You: " + std::to_string(playerScore) + "  AI: " + std::to_string(opponentScore);
